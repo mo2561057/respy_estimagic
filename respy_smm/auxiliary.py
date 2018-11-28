@@ -305,8 +305,11 @@ def get_communicator(respy_obj):
 
     write_resfort_initialization(*args)
 
+    info = MPI.Info.Create()
+    info.Set('wdir', os.getcwd())
+
     test = ROOT_DIR + '/.bld/fortran/resfort_slave'
-    worker = MPI.COMM_SELF.Spawn(test, maxprocs=num_procs - 1)
+    worker = MPI.COMM_SELF.Spawn(test, info=info, maxprocs=num_procs - 1)
 
     return worker
 
