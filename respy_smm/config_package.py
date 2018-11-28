@@ -1,7 +1,7 @@
 """This module contains some basic configuration for the package."""
 import warnings
 
-from smmrespy.auxiliary import warning_on_one_line
+from respy_smm.auxiliary import warning_on_one_line
 
 warnings.formatwarning = warning_on_one_line
 

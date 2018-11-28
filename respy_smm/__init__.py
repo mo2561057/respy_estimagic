@@ -41,7 +41,7 @@ def compile_f2py(is_debug=False):
 
 
 try:
-    from smmrespy.src import smm_interface
+    from respy_smm.src import smm_interface
 except (ModuleNotFoundError, ImportError) as e:
     # This ensures that the debug version is compiled on the development machines but not in
     # production.
@@ -49,5 +49,5 @@ except (ModuleNotFoundError, ImportError) as e:
     compile_f2py(is_debug)
 
 
-from smmrespy.interface_scipy import run_scipy
+from respy_smm.interface_scipy import run_scipy
 

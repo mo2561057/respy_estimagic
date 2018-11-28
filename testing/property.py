@@ -20,9 +20,9 @@ from codes.auxiliary import write_types
 import random
 from respy import RespyCls
 import copy
-from smmrespy import run_scipy
+from respy_smm import run_scipy
 
-from smmrespy.moments import get_moments
+from respy_smm.moments import get_moments
 from scipy.stats import wishart
 
 
@@ -71,6 +71,9 @@ while True:
 
     rslt = pkl.load(open('smm_monitoring.pkl', 'rb'))
     np.testing.assert_almost_equal(rslt['Step'].ix[0], 0.0)
+
+    os.system('git clean -df')
+
 
     # TODO: It woule be better if here this was just a random point of evaluation and not jsut
     # startw ith a different smaple size toe nsure nonzero.
@@ -124,4 +127,5 @@ while True:
         #np.testing.assert_almost_equal(rslt['Step'].ix[0], 0.0)
 
 
+    os.system('git clean -df')
 

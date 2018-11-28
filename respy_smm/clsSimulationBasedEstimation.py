@@ -14,15 +14,15 @@ if 'PMI_SIZE' in os.environ.keys():
     except ImportError:
         pass
 
-from smmrespy.auxiliary import get_optim_from_econ
-from smmrespy.auxiliary import get_econ_from_optim
-from smmrespy.auxiliary import get_communicator
-from smmrespy.auxiliary import smm_sample_pyth
-from smmrespy.auxiliary import smm_sample_f2py
-from smmrespy.auxiliary import apply_scaling
-from smmrespy.auxiliary import format_column
-from smmrespy.moments import get_moments
-from smmrespy.config_smmrespy import HUGE_FLOAT
+from respy_smm.auxiliary import get_optim_from_econ
+from respy_smm.auxiliary import get_econ_from_optim
+from respy_smm.auxiliary import get_communicator
+from respy_smm.auxiliary import smm_sample_pyth
+from respy_smm.auxiliary import smm_sample_f2py
+from respy_smm.config_package import HUGE_FLOAT
+from respy_smm.auxiliary import apply_scaling
+from respy_smm.auxiliary import format_column
+from respy_smm.moments import get_moments
 
 from respy.python.shared.shared_auxiliary import replace_missing_values
 from respy.python.solve.solve_auxiliary import pyth_create_state_space

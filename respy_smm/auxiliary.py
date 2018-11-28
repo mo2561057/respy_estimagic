@@ -33,7 +33,7 @@ from respy.clsRespy import PARAS_MAPPING
 import respy
 
 
-from smmrespy.src import smm_interface
+from respy_smm.src import smm_interface
 
 def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
     return '\n ... %s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)

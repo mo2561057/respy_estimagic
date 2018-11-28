@@ -3,8 +3,8 @@ from functools import partial
 
 from scipy.optimize import minimize
 
-from smmrespy.clsSimulationBasedEstimation import SimulationBasedEstimationCls
-from smmrespy.auxiliary import get_starting_values
+from respy_smm.clsSimulationBasedEstimation import SimulationBasedEstimationCls
+from respy_smm.auxiliary import get_starting_values
 
 
 def run_scipy(fname, moments_obs, weighing_matrix, method, max_eval):

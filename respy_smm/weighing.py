@@ -3,8 +3,8 @@ import numpy.ma as ma
 import pickle as pkl
 import numpy as np
 
-from smmrespy.auxiliary import moments_dict_to_list
-from smmrespy.moments import get_moments
+from respy_smm.auxiliary import moments_dict_to_list
+from respy_smm.moments import get_moments
 
 
 def get_weighing_matrix(df_base, num_boots, num_agents_smm, is_store=False):
