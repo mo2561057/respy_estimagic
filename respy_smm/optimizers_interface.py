@@ -3,6 +3,7 @@ from respy_smm.optimizers.optimizers_nag import run_nag
 from respy_smm.config_package import PACKAGE_DIR
 import respy
 import subprocess
+import sys
 
 
 def optimize(init_file, moments_obs, weighing_matrix, toolbox, toolbox_spec):
@@ -33,9 +34,10 @@ def optimize(init_file, moments_obs, weighing_matrix, toolbox, toolbox_spec):
 
         import pickle as pkl
 
+
         pkl.dump(infos, open('.infos.respy_smm.pkl', 'wb'))
 
-        cmd = ['mpiexec', '-n', '1', PACKAGE_DIR + '/optimizers_parallel.py']
+        cmd = ['mpiexec', '-n', '1', sys.executable, PACKAGE_DIR + '/optimizers_parallel.py']
         subprocess.check_call(cmd)
 
 
