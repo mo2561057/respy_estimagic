@@ -4,19 +4,19 @@ import numpy as np
 import pybobyqa
 import dfols
 
-from ov_tools.smm_estimation.clsSimulationBasedEstimation import SimulationBasedEstimationCls
-from ov_tools.smm_estimation.auxiliary import get_starting_values_econ
-from ov_tools.config_ov_tools import DEFAULT_BOUND
-from ov_tools.config_ov_tools import HUGE_INT
+from respy_smm.clsSimulationBasedEstimation import SimulationBasedEstimationCls
+from respy_smm.auxiliary import get_starting_values_econ
+from respy_smm.config_package import DEFAULT_BOUND
+from respy_smm.config_package import HUGE_INT
 from respy.clsRespy import PARAS_MAPPING
 from functools import partial
 
 
-def run_nag(fname, moments_obs, weighing_matrix, nag_spec):
+def run_nag(fname, moments_obs, weighing_matrix, toolbox_spec):
     """This function serves as the interface to the NAG algorithms."""
     # Distribute user specification.
-    optimizer = nag_spec['optimizer']
-    max_evals = nag_spec['max_evals']
+    algorithm = toolbox_spec['algorithm']
+    max_evals = toolbox_spec['max_evals']
 
     est_obj = SimulationBasedEstimationCls(fname, moments_obs, weighing_matrix, max_evals=max_evals)
     x_free_econ_start = get_starting_values_econ(fname)
@@ -49,9 +49,9 @@ def run_nag(fname, moments_obs, weighing_matrix, nag_spec):
     # documentation. This is already noted in the CHANGELOG and will be available shortly.
     scaling_within_bounds, rhobeg = True, 0.1
 
-    if optimizer == 'bobyqa':
+    if algorithm == 'bobyqa':
         solve = pybobyqa.solve
-    elif optimizer == 'dfols':
+    elif algorithm == 'dfols':
         solve = dfols.solve
 
     try:

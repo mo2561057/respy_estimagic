@@ -49,5 +49,6 @@ except (ModuleNotFoundError, ImportError) as e:
     compile_f2py(is_debug)
 
 
-from respy_smm.interface_scipy import run_scipy
-
+from respy_smm.optimizers_interface import optimize
+from respy_smm.weighing import get_weighing_matrix
+from respy_smm.moments import get_moments

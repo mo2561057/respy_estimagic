@@ -8,7 +8,7 @@ from respy.tests.codes.random_init import generate_init
 from respy.python.process.process_python import process
 import respy
 
-from respy_smm.clsSimulationBasedEstimation import SimulationBasedEstimationCls
+from respy_smm.clsSimulationBasedEstimquestation import SimulationBasedEstimationCls
 from respy_smm.auxiliary import transform_unconstraint_to_constraint
 from respy_smm.auxiliary import transform_constraint_to_unconstraint
 from respy_smm.auxiliary import get_econ_from_optim
