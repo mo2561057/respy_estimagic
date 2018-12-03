@@ -1,0 +1,18 @@
+name: respy_smm
+   
+dependencies:
+  - python=3.6
+  - numpy
+  - pandas
+  - statsmodels
+  - pytest
+  - pytest-xdist
+  - scipy
+  - flake8
+  - matplotlib
+  - jupyter
+  - pip:
+    - pyDOE
+    - Py-BOBYQA
+    - DFO-LS
+    - mpi4py
