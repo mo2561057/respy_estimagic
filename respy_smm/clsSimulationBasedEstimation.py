@@ -1,6 +1,7 @@
 """This module contains the main class that allows for the SMM estimation."""
 from functools import partial
 import warnings
+import time
 import copy
 import sys
 import os
@@ -184,12 +185,18 @@ class SimulationBasedEstimationCls(object):
                 j += 1
 
         # We are now simulating a sample based on the updated parameterization.
+        start = time.time()
+
         respy_smm = copy.deepcopy(respy_base)
         respy_smm.update_optim_paras(x_all_econ_eval)
         df_smm = self.create_smm_sample(respy_smm)
 
         # Construct moments for simulated dataset and evaluate the criterion function.
         moments_sim = self._get_sim_moments(df_smm)
+
+        stop = time.time()
+        duration = int(stop - start)
+
 
         stats_obs, stats_sim = [], []
         for group in ['Choice Probability', 'Wage Distribution']:
@@ -252,7 +259,8 @@ class SimulationBasedEstimationCls(object):
             warnings.warn('invalid evaluation as there are not enough thick cells')
             func = HUGE_FLOAT
 
-        args = [func, mad] + x_all_econ_eval.tolist(), stats_obs, stats_sim, weighing_matrix, respy_smm
+        args = [func, mad] + x_all_econ_eval.tolist(), stats_obs, stats_sim, weighing_matrix, \
+               respy_smm, duration
         self._logging(*args)
         self.attr['func'] = func
 
@@ -263,7 +271,7 @@ class SimulationBasedEstimationCls(object):
         """This function computes the moments from a dataset."""
         return get_moments(df)
 
-    def _logging(self, info_update, stats_obs, stats_sim, weighing_matrix, respy_smm):
+    def _logging(self, info_update, stats_obs, stats_sim, weighing_matrix, respy_smm, duration):
         """This method logs the progress of the estimation."""
         # Distribute class attributes
         num_paras = self.attr['num_paras']
@@ -310,11 +318,11 @@ class SimulationBasedEstimationCls(object):
         with open(fname, 'a') as outfile:
             fmt_ = '    {:<25}\n\n'
             outfile.write(fmt_.format(*['OVERVIEW']))
-            fmt_ = ' {:>25}{:>25}{:>25}\n\n'
-            outfile.write(fmt_.format(*['Evaluation', 'Step', 'Criterion']))
-            fmt_ = ' {:>25}{:>25}{:>25.5f}\n'
+            fmt_ = ' {:>25}{:>25}{:>25}{:>25}\n\n'
+            outfile.write(fmt_.format(*['Evaluation', 'Step', 'Criterion', 'Seconds']))
+            fmt_ = ' {:>25}{:>25}{:>25.5f}{:>25.5f}\n'
 
-            line = [self.attr["num_evals"], self.attr["num_steps"], self.attr["func"]]
+            line = [self.attr["num_evals"], self.attr["num_steps"], self.attr["func"], duration]
             outfile.write(fmt_.format(*line))
             outfile.write('\n\n')
 
