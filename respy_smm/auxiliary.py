@@ -29,7 +29,9 @@ from respy.python.shared.shared_auxiliary import get_optim_paras
 from respy.fortran.interface import write_resfort_initialization
 from respy.python.simulate.simulate_python import pyth_simulate
 from respy.python.shared.shared_constants import ROOT_DIR
-from respy.clsRespy import PARAS_MAPPING
+from respy.pre_processing.model_processing_auxiliary import _paras_mapping
+
+
 import respy
 
 
@@ -200,7 +202,7 @@ def get_starting_values_econ(fname):
     # TODO: This is only needed because of the crazy RESPY setup.
     paras_fixed_reordered = optim_paras['paras_fixed'].copy()
     paras_fixed = paras_fixed_reordered[:]
-    for old, new in PARAS_MAPPING:
+    for old, new in _paras_mapping():
         paras_fixed[old] = paras_fixed_reordered[new]
 
     x_free_econ_start = list()
@@ -291,17 +293,16 @@ def get_communicator(respy_obj):
     optim_paras, num_periods, edu_spec, is_debug, num_draws_emax, seed_emax, is_interpolated, \
     num_points_interp, is_myopic, tau, num_procs, num_agents_sim, num_draws_prob, \
     seed_prob, seed_sim, optimizer_options, optimizer_used, maxfun, precond_spec, \
-    file_sim, num_paras, num_types, num_agents_est, is_attach = dist_class_attributes(respy_obj,
+    file_sim, num_paras, num_types, num_agents_est = dist_class_attributes(respy_obj,
         'optim_paras', 'num_periods', 'edu_spec', 'is_debug', 'num_draws_emax', 'seed_emax',
         'is_interpolated', 'num_points_interp', 'is_myopic', 'tau', 'num_procs', 'num_agents_sim',
         'num_draws_prob', 'seed_prob', 'seed_sim', 'optimizer_options',  'optimizer_used',
-        'maxfun', 'precond_spec', 'file_sim', 'num_paras', 'num_types', 'num_agents_est',
-        'is_attach')
+        'maxfun', 'precond_spec', 'file_sim', 'num_paras', 'num_types', 'num_agents_est')
 
     args = (optim_paras, is_interpolated, num_draws_emax, num_periods, num_points_interp,
         is_myopic, edu_spec, is_debug, num_draws_prob, num_agents_sim, seed_prob, seed_emax,
         tau, num_procs, 'simulate', seed_sim, optimizer_options, optimizer_used, maxfun, num_paras,
-        precond_spec, file_sim, None, num_types, num_agents_est, is_attach)
+        precond_spec, file_sim, None, num_types, num_agents_est)
 
     write_resfort_initialization(*args)
 

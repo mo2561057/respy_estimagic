@@ -8,7 +8,7 @@ from respy_smm.clsSimulationBasedEstimation import SimulationBasedEstimationCls
 from respy_smm.auxiliary import get_starting_values_econ
 from respy_smm.config_package import DEFAULT_BOUND
 from respy_smm.config_package import HUGE_INT
-from respy.clsRespy import PARAS_MAPPING
+from respy.pre_processing.model_processing_auxiliary import _paras_mapping
 from functools import partial
 
 
@@ -28,7 +28,7 @@ def run_nag(fname, moments_obs, weighing_matrix, toolbox_spec):
 
     # TODO: This requirement is simply due to lack of a good parameter management in RESPY.
     paras_bounds = paras_bounds_reordered[:]
-    for old, new in PARAS_MAPPING:
+    for old, new in _paras_mapping():
         paras_bounds[new] = paras_bounds_reordered[old]
 
     box = list()

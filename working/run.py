@@ -12,18 +12,18 @@ import respy_smm
 np.random.seed(123)
 
 # This is some setup required for the Monte Carlo exercise.
-if False:
+if True:
 
     from respy_smm import get_weighing_matrix
-    from respy.python.process.process_python import process
+    from respy.pre_processing.data_processing import process_dataset
     from respy_smm import get_moments
     import respy
 
     respy_obs = respy.RespyCls('debug.respy.ini')
 
-    respy.simulate(respy_obs)
+    respy_obs.simulate()
 
-    df_base = process(respy_obs)
+    df_base = process_dataset(respy_obs)
 
     num_agents_smm = 10
     num_boots = 50

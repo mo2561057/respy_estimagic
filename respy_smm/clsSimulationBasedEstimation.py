@@ -36,7 +36,7 @@ from respy.python.shared.shared_constants import DATA_LABELS_SIM
 from respy.python.shared.shared_auxiliary import get_optim_paras
 from respy.python.shared.shared_auxiliary import create_draws
 from respy.python.shared.shared_constants import MISSING_INT
-from respy.clsRespy import PARAS_MAPPING
+from respy.pre_processing.model_processing_auxiliary import _paras_mapping
 import respy
 
 sys.path.insert(0, TEST_RESOURCES_BUILD)
@@ -174,7 +174,7 @@ class SimulationBasedEstimationCls(object):
             x_all_econ_eval = self.attr['x_all_econ_start'].copy()
             paras_fixed_reordered = self.attr['paras_fixed'].copy()
             paras_fixed = paras_fixed_reordered[:]
-            for old, new in PARAS_MAPPING:
+            for old, new in _paras_mapping():
                 paras_fixed[old] = paras_fixed_reordered[new]
 
             j = 0

@@ -113,6 +113,8 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, m
     edu_spec%start = edu_start
     edu_spec%max = edu_max
 
+    CALL extract_parsing_info(num_paras, num_types, pinfo)
+
     CALL fort_calculate_rewards_systematic(periods_rewards_systematic, num_periods, states_number_period, states_all, max_states_period, optim_paras)
 
     IF(SLAVECOMM_F2PY .NE. MISSING_INT) THEN
