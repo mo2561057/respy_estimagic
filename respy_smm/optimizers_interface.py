@@ -5,7 +5,7 @@ import respy
 import sys
 
 from respy_smm.optimizers.optimizers_nag import run_nag
-from respy_smm.config_package import PACKAGE_DIR
+from respy_smm import PACKAGE_DIR
 
 
 def optimize(init_file, moments_obs, weighing_matrix, toolbox, toolbox_spec):

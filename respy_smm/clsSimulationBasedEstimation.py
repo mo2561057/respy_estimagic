@@ -18,9 +18,9 @@ if 'PMI_SIZE' in os.environ.keys():
 from respy_smm.auxiliary import get_communicator
 from respy_smm.auxiliary import smm_sample_pyth
 from respy_smm.auxiliary import smm_sample_f2py
-from respy_smm.config_package import HUGE_FLOAT
 from respy_smm.auxiliary import format_column
 from respy_smm.moments import get_moments
+from respy_smm import HUGE_FLOAT
 
 from respy.pre_processing.model_processing_auxiliary import _paras_mapping
 from respy.python.shared.shared_auxiliary import replace_missing_values

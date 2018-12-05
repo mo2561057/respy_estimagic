@@ -6,8 +6,8 @@ import dfols
 from respy_smm.clsSimulationBasedEstimation import SimulationBasedEstimationCls
 from respy.pre_processing.model_processing_auxiliary import _paras_mapping
 from respy_smm.auxiliary import get_starting_values_econ
-from respy_smm.config_package import DEFAULT_BOUND
-from respy_smm.config_package import HUGE_INT
+from respy_smm import DEFAULT_BOUND
+from respy_smm import HUGE_INT
 from functools import partial
 
 
