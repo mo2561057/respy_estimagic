@@ -1,14 +1,5 @@
 !***************************************************************************************************
 !***************************************************************************************************
-! TODO: This is a list of small changes that would be nice to make to the core package to allow for easier code in scenarios like this in general.
-!
-! * It would be nice if file_sim were an optinal argument in the RESPY package then everybody using it from outside does not need to bother with it.
-! * How about removing the need that data_sim needs to an allocatable array when passed in to simulate()
-!
-!
-!
-!***************************************************************************************************
-!***************************************************************************************************
 SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, mapping_state_idx_int, max_states_period_int, coeffs_common, coeffs_a, coeffs_b, coeffs_edu, coeffs_home, shocks_cholesky, delta, is_interpolated_int, num_points_interp_int, num_draws_emax_int, num_periods_int, is_myopic_int, is_debug_int, periods_draws_emax_int, num_agents_sim_int, periods_draws_sims, type_spec_shares, type_spec_shifts, edu_start, edu_max, edu_lagged, edu_share, num_paras_int, SLAVECOMM_F2PY)
 
     !/* external libraries      */
@@ -53,21 +44,18 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, m
     LOGICAL, INTENT(IN)             :: is_myopic_int
     LOGICAL, INTENT(IN)             :: is_debug_int
 
-    ! TODO: can be removed in the future hopefully
     DOUBLE PRECISION                :: x_all_current(num_paras_int)
     DOUBLE PRECISION, ALLOCATABLE   :: data_sim(:, :)
 
     INTEGER                         :: num_states
     INTEGER                         :: period
 
-    CHARACTER(225)                  :: file_sim
+    ! TODO: Can the code be adjusted so that no value is set.
+    CHARACTER(225)                  :: file_sim = ''
 
 !---------------------------------------------------------------------------------------------------
 ! Algorithm
 !---------------------------------------------------------------------------------------------------
-
-    ! TODO: remove needed, but requires changes to RESPY as at the beginning of the module.
-    file_sim = 'mock.'
 
     ! Ensure that there is no problem with the repeated allocation of the containers.
     IF (ALLOCATED(periods_rewards_systematic)) DEALLOCATE(periods_rewards_systematic)

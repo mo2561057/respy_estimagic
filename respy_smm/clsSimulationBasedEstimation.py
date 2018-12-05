@@ -15,16 +15,14 @@ if 'PMI_SIZE' in os.environ.keys():
     except ImportError:
         pass
 
-from respy_smm.auxiliary import get_optim_from_econ
-from respy_smm.auxiliary import get_econ_from_optim
 from respy_smm.auxiliary import get_communicator
 from respy_smm.auxiliary import smm_sample_pyth
 from respy_smm.auxiliary import smm_sample_f2py
 from respy_smm.config_package import HUGE_FLOAT
-from respy_smm.auxiliary import apply_scaling
 from respy_smm.auxiliary import format_column
 from respy_smm.moments import get_moments
 
+from respy.pre_processing.model_processing_auxiliary import _paras_mapping
 from respy.python.shared.shared_auxiliary import replace_missing_values
 from respy.python.solve.solve_auxiliary import pyth_create_state_space
 from respy.python.shared.shared_auxiliary import dist_class_attributes
@@ -36,7 +34,6 @@ from respy.python.shared.shared_constants import DATA_LABELS_SIM
 from respy.python.shared.shared_auxiliary import get_optim_paras
 from respy.python.shared.shared_auxiliary import create_draws
 from respy.python.shared.shared_constants import MISSING_INT
-from respy.pre_processing.model_processing_auxiliary import _paras_mapping
 import respy
 
 sys.path.insert(0, TEST_RESOURCES_BUILD)
@@ -45,7 +42,7 @@ import f2py_interface as respy_f2py
 
 class SimulationBasedEstimationCls(object):
     """This class manages the distribution of the use requests throughout the toolbox."""
-    def __init__(self, init_file, moments_obs, weighing_matrix, scales=None, max_evals=None):
+    def __init__(self, init_file, moments_obs, weighing_matrix, max_evals=None):
 
         respy_base = respy.RespyCls(init_file)
 
@@ -66,7 +63,6 @@ class SimulationBasedEstimationCls(object):
         self.attr = dict()
         self.attr['mpi_setup'] = worker
 
-        self.attr['paras_bounds'] = optim_paras['paras_bounds']
         self.attr['paras_fixed'] = optim_paras['paras_fixed']
         self.attr['weighing_matrix'] = weighing_matrix
         self.attr['moments_obs'] = moments_obs
@@ -80,19 +76,11 @@ class SimulationBasedEstimationCls(object):
         self.attr['num_steps'] = 0
         self.attr['func'] = None
 
-        if scales is None:
-            num_free = optim_paras['paras_fixed'].count(False)
-            scales = np.tile(1.0, num_free)
-        else:
-            pass
-        self.attr['scales'] = scales
-
         # We need to construct sound vectors that are either all economic or all optimizer
         # parameter values. This is not nicely done with the RESPY routines at all.
         x_all_econ = get_optim_paras(optim_paras, num_paras, 'all', True)
         x_all_econ[43:53] = cholesky_to_coeffs(extract_cholesky(x_all_econ)[0])
         self.attr['x_all_econ_start'] = x_all_econ.copy()
-        self.attr['x_all_optim_start'] = get_optim_from_econ(x_all_econ, self.attr['paras_bounds'])
 
     def create_smm_sample(self, respy_obj):
         """This method creates a dataframe for the ..."""
@@ -140,63 +128,43 @@ class SimulationBasedEstimationCls(object):
 
         return data_frame
 
-    def criterion(self, is_econ, x_input):
+    def criterion(self, x_input):
         """This function evaluates the criterion function for a candidate parametrization."""
         # Distribute class attributes
-        x_all_optim_start = self.attr['x_all_optim_start']
+        x_all_econ_start = self.attr['x_all_econ_start']
         weighing_matrix = self.attr['weighing_matrix']
-        paras_bounds = self.attr['paras_bounds']
+        num_periods = self.attr['num_periods']
         paras_fixed = self.attr['paras_fixed']
         moments_obs = self.attr['moments_obs']
         respy_base = self.attr['respy_base']
         num_paras = self.attr['num_paras']
-        scales = self.attr['scales']
-        num_periods = self.attr['num_periods']
 
         # We first need to undo the scaling exercise.
-        if not is_econ:
-            x_free_optim = apply_scaling(x_input, scales, 'undo')
+        # TODO: This is only needed because of the crazy RESPY setup.
+        x_all_econ_eval = x_all_econ_start.copy()
+        paras_fixed_reordered = paras_fixed.copy()
+        paras_fixed = paras_fixed_reordered[:]
+        for old, new in _paras_mapping():
+            paras_fixed[old] = paras_fixed_reordered[new]
 
-            # Extend optimization parameter to include all values.
-            x_all_optim_eval = x_all_optim_start.copy()
-            j = 0
-            for i in range(num_paras):
-                if paras_fixed[i]:
-                    continue
-                x_all_optim_eval[i] = x_free_optim[j]
-                j += 1
-
-            x_all_econ_eval = get_econ_from_optim(x_all_optim_eval, paras_bounds)
-        else:
-
-            # TODO: This is only needed because of the crazy RESPY setup.
-            # TODO: When using the economic parameters then there is not scaling done at all.
-            x_all_econ_eval = self.attr['x_all_econ_start'].copy()
-            paras_fixed_reordered = self.attr['paras_fixed'].copy()
-            paras_fixed = paras_fixed_reordered[:]
-            for old, new in _paras_mapping():
-                paras_fixed[old] = paras_fixed_reordered[new]
-
-            j = 0
-            for i in range(num_paras):
-                if paras_fixed[i]:
-                    continue
-                x_all_econ_eval[i] = x_input[j]
-                j += 1
+        j = 0
+        for i in range(num_paras):
+            if paras_fixed[i]:
+                continue
+            x_all_econ_eval[i] = x_input[j]
+            j += 1
 
         # We are now simulating a sample based on the updated parameterization.
         start = time.time()
 
         respy_smm = copy.deepcopy(respy_base)
         respy_smm.update_optim_paras(x_all_econ_eval)
-        df_smm = self.create_smm_sample(respy_smm)
 
-        # Construct moments for simulated dataset and evaluate the criterion function.
+        df_smm = self.create_smm_sample(respy_smm)
         moments_sim = self._get_sim_moments(df_smm)
 
         stop = time.time()
         duration = int(stop - start)
-
 
         stats_obs, stats_sim = [], []
         for group in ['Choice Probability', 'Wage Distribution']:
@@ -347,4 +315,3 @@ class SimulationBasedEstimationCls(object):
                 except AttributeError:
                     pass
                 raise StopIteration
-

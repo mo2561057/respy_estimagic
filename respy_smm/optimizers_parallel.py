@@ -5,8 +5,8 @@ import os
 from respy_smm.optimizers.optimizers_nag import run_nag
 
 
-
 if __name__ == "__main__":
+
     infos = pkl.load(open('.infos.respy_smm.pkl', 'rb'))
 
     os.remove('.infos.respy_smm.pkl')
