@@ -1,9 +1,9 @@
-import socket
 import os
 
 from numpy import f2py
 
-PACKAGE_DIR = os.path.dirname(os.path.realpath(__file__))
+from respy_smm.config_package import PACKAGE_DIR
+from respy_smm.config_package import IS_DEBUG
 
 FLAGS_DEBUG = []
 FLAGS_DEBUG += ['-O', '-Wall', '-Wline-truncation', '-Wsurprising', '-Waliasing']
@@ -43,10 +43,7 @@ def compile_f2py(is_debug=False):
 try:
     from respy_smm.src import smm_interface
 except (ModuleNotFoundError, ImportError) as e:
-    # This ensures that the debug version is compiled on the development machines but not in
-    # production.
-    is_debug = socket.gethostname() in ['pontos', 'heracles']
-    compile_f2py(is_debug)
+    compile_f2py(IS_DEBUG)
 
 
 from respy_smm.optimizers_interface import optimize
