@@ -39,10 +39,10 @@ if False:
 
         tests += [[dict_, toolbox, toolbox_spec, fval]]
 
-        pkl.dump(tests, open(PACKAGE_DIR + '/tests/regression_vault.respy_smm.pkl', 'wb'))
+        pkl.dump(tests, open(PACKAGE_DIR + '/tests/regression_vault.pkl', 'wb'))
 
 
-tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.respy_smm.pkl', 'rb'))
+tests = pkl.load(open(PACKAGE_DIR + '/tests/regression_vault.pkl', 'rb'))
 
 for test in tests:
 
