@@ -2,11 +2,11 @@ import pickle as pkl
 
 import numpy as np
 
-from respy.tests.codes.random_init import print_init_dict
+from respy.tests.codes.random_init import write_init_file
 from respy.tests.codes.random_init import generate_init
 
 from respy_smm.tests.auxiliary import get_ingredients
-from respy_smm import run_scipy
+from respy_smm import optimize
 
 
 def test_1():
@@ -18,7 +18,14 @@ def test_1():
     generate_init(constr)
 
     respy_obj, moments_obs, num_moments, weighing_matrix = get_ingredients('test.respy.ini')
-    run_scipy('test.respy.ini', moments_obs, weighing_matrix, 'POWELL', 10)
+
+    # TODO: This needs to be a general function once more optimization algorithms are available.
+    toolbox = 'nag'
+    toolbox_spec = dict()
+    toolbox_spec['algorithm'] = 'bobyqa'
+    toolbox_spec['max_evals'] = np.random.randint(1, 10)
+
+    optimize('test.respy.ini', moments_obs, weighing_matrix, toolbox, toolbox_spec)
 
     rslt = pkl.load(open('smm_monitoring.pkl', 'rb'))
     np.testing.assert_almost_equal(rslt['Step'].iloc[0], 0.0)
@@ -32,6 +39,7 @@ def test_2():
     constr['flag_myopic'] = False
 
     dict_ = generate_init(constr)
+
     # TODO: Would be nicer if we could just sample a random point ...
     respy_obj, moments_obs, num_moments, weighing_matrix = get_ingredients('test.respy.ini')
 
@@ -43,13 +51,20 @@ def test_2():
 
         dict_['PROGRAM']['version'] = version
         if version == 'PYTHON':
+            dict_['PROGRAM']['threads'] = 1
             dict_['PROGRAM']['procs'] = 1
         else:
             dict_['PROGRAM']['procs'] = np.random.randint(1, 5)
 
-        print_init_dict(dict_)
+        write_init_file(dict_)
 
-        run_scipy('test.respy.ini', moments_obs, weighing_matrix, 'POWELL', 1)
+        # TODO: This needs to be a general function once more optimization algorithms are available.
+        toolbox = 'nag'
+        toolbox_spec = dict()
+        toolbox_spec['algorithm'] = 'bobyqa'
+        toolbox_spec['max_evals'] = 1
+
+        optimize('test.respy.ini', moments_obs, weighing_matrix, toolbox, toolbox_spec)
 
         rslt = pkl.load(open('smm_monitoring.pkl', 'rb'))
         if base is None:

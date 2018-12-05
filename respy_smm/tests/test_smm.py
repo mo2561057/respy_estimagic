@@ -4,11 +4,11 @@ import pytest
 
 from respy.python.shared.shared_auxiliary import dist_class_attributes
 from respy.python.shared.shared_auxiliary import get_optim_paras
+from respy.pre_processing.data_processing import process_dataset
 from respy.tests.codes.random_init import generate_init
-from respy.python.process.process_python import process
 import respy
 
-from respy_smm.clsSimulationBasedEstimquestation import SimulationBasedEstimationCls
+from respy_smm.clsSimulationBasedEstimation import SimulationBasedEstimationCls
 from respy_smm.auxiliary import transform_unconstraint_to_constraint
 from respy_smm.auxiliary import transform_constraint_to_unconstraint
 from respy_smm.auxiliary import get_econ_from_optim
@@ -65,13 +65,13 @@ def test_3():
         respy_base = respy.RespyCls('test.respy.ini')
         respy.simulate(respy_base)
 
-        df_base = process(respy_base)
+        df_base = process_dataset(respy_base)
         num_agents_base = df_base.index.get_level_values('Identifier').nunique()
         num_agents_smm = np.random.randint(1, num_agents_base)
 
         weighing_matrix = get_weighing_matrix(df_base, 10, num_agents_smm)
 
-        moments_obs = get_moments(process(respy_base))
+        moments_obs = get_moments(process_dataset(respy_base))
 
         # We now set up the SMM estimation.
         est_obj = SimulationBasedEstimationCls('test.respy.ini', moments_obs, weighing_matrix)
@@ -108,9 +108,9 @@ def test_5():
 
     generate_init()
     respy_base = respy.RespyCls('test.respy.ini')
-    respy.simulate(respy_base)
+    respy_base.simulate()
 
-    df_base = process(respy_base)
+    df_base = process_dataset(respy_base)
     num_agents_base = df_base.index.get_level_values('Identifier').nunique()
     num_agents_smm = np.random.randint(1, num_agents_base)
 

@@ -234,31 +234,6 @@ class SimulationBasedEstimationCls(object):
 
         mad = float(np.mean(np.abs(np.array(probs_obs) - np.array(probs_sim))))
 
-        # This ensures that the optimizer does not get stuck in extreme areas where most of the
-        # non-wage cells are zero. The zero choice probabilities for non-wage choices do not
-        # result in ValueError above, that is why this is handled here explicitly.
-        is_invalid = False
-        for i, label in enumerate(['Wage A', 'Wage B', 'School', 'Home']):
-            stats_check_obs, stats_check_sim = list(), list()
-            for period in range(num_periods):
-                if period not in moments_sim[group].keys():
-                    continue
-                if period not in moments_obs[group].keys():
-                    continue
-
-                stats_check_obs.append(moments_obs['Choice Probability'][period][i])
-                stats_check_sim.append(moments_sim['Choice Probability'][period][i])
-
-            num_obs = (np.array(stats_check_obs) > 0.05).sum()
-            num_sim = (np.array(stats_check_sim) > 0.05).sum()
-
-            if num_sim < 0.5 * num_obs:
-                is_invalid = True
-
-        if is_invalid:
-            warnings.warn('invalid evaluation as there are not enough thick cells')
-            func = HUGE_FLOAT
-
         args = [func, mad] + x_all_econ_eval.tolist(), stats_obs, stats_sim, weighing_matrix, \
                respy_smm, duration
         self._logging(*args)

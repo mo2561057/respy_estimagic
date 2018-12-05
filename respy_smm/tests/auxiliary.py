@@ -10,7 +10,6 @@ from respy.tests.codes.auxiliary import write_draws
 from respy.tests.codes.auxiliary import write_types
 from respy_smm.moments import get_moments
 from respy import RespyCls
-from respy import simulate
 
 
 def get_ingredients(fname):
@@ -30,7 +29,7 @@ def get_ingredients(fname):
     # We need to simulate with a single core.
     respy_sim = copy.deepcopy(respy_obj)
     respy_sim.attr['num_procs'] = 1
-    moments_obs = get_moments(simulate(respy_sim)[1])
+    moments_obs = get_moments(respy_sim.simulate()[1])
     num_moments = 0
     for group in ['Choice Probability', 'Wage Distribution']:
         for period in range(num_periods):
