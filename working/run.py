@@ -12,7 +12,7 @@ import respy_smm
 np.random.seed(123)
 
 # This is some setup required for the Monte Carlo exercise.
-if True:
+if False:
 
     from respy_smm import get_weighing_matrix
     from respy.pre_processing.data_processing import process_dataset
