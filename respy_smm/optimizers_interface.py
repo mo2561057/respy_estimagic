@@ -11,7 +11,7 @@ from respy.python.shared.shared_auxiliary import coeffs_to_cholesky
 from respy.pre_processing.model_processing import write_init_file
 from respy.pre_processing.model_processing import read_init_file
 from respy_smm.optimizers.optimizers_nag import run_nag
-from respy_smm.config_package import PACKAGE_DIR
+from respy_smm import PACKAGE_DIR
 
 
 def optimize(init_file, moments_obs, weighing_matrix, toolbox, toolbox_spec):

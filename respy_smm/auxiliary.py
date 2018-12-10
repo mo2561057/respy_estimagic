@@ -18,10 +18,6 @@ from respy.python.shared.shared_constants import ROOT_DIR
 from respy_smm.src import smm_interface
 
 
-def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
-    return '\n ... %s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
-
-
 def format_column(x):
     """This function provides pretty floats for the columns."""
     if isinstance(x, str):

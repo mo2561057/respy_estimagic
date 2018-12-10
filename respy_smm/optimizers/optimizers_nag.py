@@ -5,7 +5,7 @@ import dfols
 
 from respy_smm.clsSimulationBasedEstimation import SimulationBasedEstimationCls
 from respy_smm.auxiliary_depreciation import process_shocks_bounds
-from respy_smm.config_package import HUGE_INT
+from respy_smm import HUGE_INT
 from functools import partial
 
 

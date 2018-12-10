@@ -1,9 +1,10 @@
-import socket
+import warnings
 import os
 
 from numpy import f2py
 
 PACKAGE_DIR = os.path.dirname(os.path.realpath(__file__))
+IS_DEBUG = 'IS_DEVELOPMENT' in os.environ.keys()
 
 FLAGS_DEBUG = []
 FLAGS_DEBUG += ['-O', '-Wall', '-Wline-truncation', '-Wsurprising', '-Waliasing']
@@ -12,6 +13,22 @@ FLAGS_DEBUG += ['-fbacktrace', '-g', '-fmax-errors=1', '-ffree-line-length-0']
 FLAGS_DEBUG += ['-cpp', '-Wcharacter-truncation', '-Wimplicit-interface']
 
 FLAGS_PRODUCTION = ['-O3', '-ffree-line-length-0']
+
+
+HUGE_INT = 1000000000
+HUGE_FLOAT = 1e15
+
+DEFAULT_BOUND = 1e8
+
+
+# We need to manage our warnings
+def warning_on_one_line(message, category, filename, lineno, file=None, line=None):
+    return '\n ... %s:%s: %s:%s\n' % (filename, lineno, category.__name__, message)
+
+
+warnings.formatwarning = warning_on_one_line
+if not IS_DEBUG:
+    warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
 def compile_f2py(is_debug=False):
@@ -43,10 +60,7 @@ def compile_f2py(is_debug=False):
 try:
     from respy_smm.src import smm_interface
 except (ModuleNotFoundError, ImportError) as e:
-    # This ensures that the debug version is compiled on the development machines but not in
-    # production.
-    is_debug = socket.gethostname() in ['pontos', 'heracles']
-    compile_f2py(is_debug)
+    compile_f2py(IS_DEBUG)
 
 
 from respy_smm.optimizers_interface import optimize

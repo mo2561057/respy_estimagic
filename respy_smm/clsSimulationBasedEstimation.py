@@ -20,9 +20,9 @@ from respy_smm.auxiliary_depreciation import respy_spec_old_to_new
 from respy_smm.auxiliary import get_communicator
 from respy_smm.auxiliary import smm_sample_pyth
 from respy_smm.auxiliary import smm_sample_f2py
-from respy_smm.config_package import HUGE_FLOAT
 from respy_smm.clsLogging import logger_obj
 from respy_smm.moments import get_moments
+from respy_smm import HUGE_FLOAT
 
 from respy.python.shared.shared_auxiliary import replace_missing_values
 from respy.python.solve.solve_auxiliary import pyth_create_state_space
