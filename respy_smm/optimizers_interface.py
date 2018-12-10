@@ -33,8 +33,6 @@ def optimize(init_file, moments_obs, weighing_matrix, toolbox, toolbox_spec):
     try:
         if num_procs == 1:
             run_nag(init_file, moments_obs, weighing_matrix, toolbox_spec)
-
-
         else:
 
             infos = dict()

@@ -2,6 +2,8 @@
 RESPY are completed."""
 import numpy as np
 
+from respy.python.shared.shared_auxiliary import get_optim_paras
+
 
 def shocks_spec_new_to_old(shock_spec_new):
 
@@ -33,12 +35,8 @@ def shocks_spec_new_to_old(shock_spec_new):
 
 # TODO: Can I better align the interfaces to the two functions, this is now a all out preacemen t?
 def respy_spec_old_to_new(optim_paras, num_paras):
-    from respy.python.shared.shared_auxiliary import get_optim_paras
+
     x_all_econ_start = get_optim_paras(optim_paras, num_paras, 'all', True)
-
-
-    # TODO: This can go once RESPY is set up with the new parameter management.
-    import numpy as np
     shocks_cov = optim_paras['shocks_cholesky'].dot(optim_paras['shocks_cholesky'].T)
 
     sds = np.sqrt(np.diag(shocks_cov))

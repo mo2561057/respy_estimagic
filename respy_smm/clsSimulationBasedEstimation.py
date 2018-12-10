@@ -76,6 +76,8 @@ class SimulationBasedEstimationCls(object):
 
         self.attr['x_all_econ_start'] = respy_spec_old_to_new(optim_paras, num_paras)
 
+        print(self.attr['x_all_econ_start'])
+        raise AssertionError
     def create_smm_sample(self, respy_obj):
         """This method creates a dataframe for the ..."""
         # We need to incur the proper setup cost.
@@ -83,12 +85,10 @@ class SimulationBasedEstimationCls(object):
 
             worker = self.attr['mpi_setup']
 
-            num_paras, optim_paras, num_procs, num_periods, is_debug, seed_emax, seed_sim, \
-            num_draws_emax, num_agents_sim, num_types, edu_spec, version = dist_class_attributes(
-                respy_obj, 'num_paras', 'optim_paras', 'num_procs', 'num_periods', 'is_debug',
-                'seed_emax', 'seed_sim', 'num_draws_emax', 'num_agents_sim', 'num_types',
-                'edu_spec',
-                'version')
+            num_paras, num_procs, num_periods, is_debug, seed_emax, seed_sim, num_draws_emax, \
+            num_agents_sim, num_types, edu_spec, version = dist_class_attributes(respy_obj,
+                'num_paras', 'num_procs', 'num_periods', 'is_debug', 'seed_emax', 'seed_sim',
+                'num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec', 'version')
 
             periods_draws_emax = create_draws(num_periods, num_draws_emax, seed_emax, is_debug)
             periods_draws_sims = create_draws(num_periods, num_agents_sim, seed_sim, is_debug)
