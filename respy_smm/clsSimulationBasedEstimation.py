@@ -1,6 +1,5 @@
 """This module contains the main class that allows for the SMM estimation."""
 from functools import partial
-import warnings
 import time
 import copy
 import sys
@@ -15,13 +14,14 @@ if 'PMI_SIZE' in os.environ.keys():
     except ImportError:
         pass
 
+from respy.python.shared.shared_auxiliary import coeffs_to_cholesky
 from respy_smm.auxiliary_depreciation import shocks_spec_new_to_old
 from respy_smm.auxiliary_depreciation import respy_spec_old_to_new
 from respy_smm.auxiliary import get_communicator
 from respy_smm.auxiliary import smm_sample_pyth
 from respy_smm.auxiliary import smm_sample_f2py
 from respy_smm.config_package import HUGE_FLOAT
-from respy_smm.auxiliary import format_column
+from respy_smm.clsLogging import logger_obj
 from respy_smm.moments import get_moments
 
 from respy.python.shared.shared_auxiliary import replace_missing_values
@@ -61,23 +61,115 @@ class SimulationBasedEstimationCls(object):
         self.attr = dict()
         self.attr['mpi_setup'] = worker
 
+        self.attr['x_all_econ_start'] = respy_spec_old_to_new(optim_paras, num_paras)
         self.attr['paras_fixed'] = optim_paras['paras_fixed']
         self.attr['weighing_matrix'] = weighing_matrix
         self.attr['moments_obs'] = moments_obs
+        self.attr['num_periods'] = num_periods
         self.attr['respy_base'] = respy_base
         self.attr['num_paras'] = num_paras
         self.attr['max_evals'] = max_evals
-        self.attr['num_periods'] = num_periods
-
-        self.attr['df_info'] = None
         self.attr['num_evals'] = 0
-        self.attr['num_steps'] = 0
         self.attr['func'] = None
 
-        self.attr['x_all_econ_start'] = respy_spec_old_to_new(optim_paras, num_paras)
+        logger_obj.setup_information(num_paras, max_evals, optim_paras['paras_fixed'])
 
-        print(self.attr['x_all_econ_start'])
-        raise AssertionError
+    def criterion(self, x_input):
+        """This function evaluates the criterion function for a candidate parametrization."""
+        # Distribute class attributes
+        x_all_econ_start = self.attr['x_all_econ_start']
+        weighing_matrix = self.attr['weighing_matrix']
+        num_periods = self.attr['num_periods']
+        paras_fixed = self.attr['paras_fixed']
+        moments_obs = self.attr['moments_obs']
+        respy_base = self.attr['respy_base']
+        num_paras = self.attr['num_paras']
+
+        x_all_econ_eval = x_all_econ_start.copy()
+        j = 0
+        for i in range(num_paras):
+            if paras_fixed[i]:
+                continue
+            x_all_econ_eval[i] = x_input[j]
+            j += 1
+
+        # We are now simulating a sample based on the updated parametrization.
+        start = time.time()
+
+        respy_smm = copy.deepcopy(respy_base)
+
+        x_all_econ_eval_respy_old = x_all_econ_eval.copy()
+        x_all_econ_eval_respy_old[43:53] = shocks_spec_new_to_old(x_all_econ_eval[43:53])
+
+        # TODO: Move to a proper testing setup once settled on interface.
+        arg_1 = x_all_econ_eval[43:53][:4]
+        arg_2 = x_all_econ_eval_respy_old[43:53][[0, 4, 7, 9]]
+        np.testing.assert_almost_equal(arg_1, arg_2)
+
+        # TODO: This is crude way to ensure positive semidefinite matrix for a valid evaluation.
+        #  Now we simply return a huge value.
+        try:
+            coeffs_to_cholesky(x_all_econ_eval_respy_old[43:53])
+        except np.linalg.linalg.LinAlgError:
+            msg = 'invalid evaluation due to lack of proper covariance matrix'
+            logger_obj.record_abort_eval(msg)
+            return HUGE_FLOAT
+
+        respy_smm.update_optim_paras(x_all_econ_eval_respy_old)
+        df_smm = self.create_smm_sample(respy_smm)
+        moments_sim = self._get_sim_moments(df_smm)
+
+        stop = time.time()
+        duration = int(stop - start)
+
+        stats_obs, stats_sim = [], []
+        for group in ['Choice Probability', 'Wage Distribution']:
+            for period in range(num_periods):
+
+                if period not in moments_sim[group].keys():
+                    continue
+                if period not in moments_obs[group].keys():
+                    continue
+
+                stats_obs.extend(moments_obs[group][period])
+                stats_sim.extend(moments_sim[group][period])
+
+        # The calculation of the criterion function fails if the not all moments that were
+        # calculated on the observed dataset are also available for the simulated dataset. This
+        # can happen, for example, if nobody in the simulated dataset work in a particular period
+        # and thus no information on the wage distribution is available.
+        stats_diff = np.array(stats_obs) - np.array(stats_sim)
+        try:
+            func = float(np.dot(np.dot(stats_diff, weighing_matrix), stats_diff))
+        except ValueError:
+            msg = 'invalid evaluation due to missing moments'
+            logger_obj.record_abort_eval(msg)
+            return HUGE_FLOAT
+
+        # We also want to log the choice probabilities for logging purposes.
+        probs_obs, probs_sim = [], []
+        for group in ['Choice Probability']:
+            for period in range(num_periods):
+                if period not in moments_sim[group].keys():
+                    continue
+                if period not in moments_obs[group].keys():
+                    continue
+                probs_obs.extend(moments_obs[group][period])
+                probs_sim.extend(moments_sim[group][period])
+
+        mad = float(np.mean(np.abs(np.array(probs_obs) - np.array(probs_sim))))
+
+        args = []
+        args += [[func, mad] + x_all_econ_eval.tolist(), stats_obs, stats_sim]
+        args += [weighing_matrix, respy_smm, duration]
+        logger_obj.record(*args)
+
+        self.attr['func'] = func
+
+        self._check_termination()
+
+        return func
+
     def create_smm_sample(self, respy_obj):
         """This method creates a dataframe for the ..."""
         # We need to incur the proper setup cost.
@@ -122,183 +214,13 @@ class SimulationBasedEstimationCls(object):
 
         return data_frame
 
-    def criterion(self, x_input):
-        """This function evaluates the criterion function for a candidate parametrization."""
-        # Distribute class attributes
-        x_all_econ_start = self.attr['x_all_econ_start']
-        weighing_matrix = self.attr['weighing_matrix']
-        num_periods = self.attr['num_periods']
-        paras_fixed = self.attr['paras_fixed']
-        moments_obs = self.attr['moments_obs']
-        respy_base = self.attr['respy_base']
-        num_paras = self.attr['num_paras']
+    def get_attr(self, key):
+        """Get attributes."""
+        return self.attr[key]
 
-        x_all_econ_eval = x_all_econ_start.copy()
-        j = 0
-        for i in range(num_paras):
-            if paras_fixed[i]:
-                continue
-            x_all_econ_eval[i] = x_input[j]
-            j += 1
-
-        # We are now simulating a sample based on the updated parametrization.
-        start = time.time()
-
-        respy_smm = copy.deepcopy(respy_base)
-
-
-
-        x_all_econ_eval_respy_old = x_all_econ_eval.copy()
-        x_all_econ_eval_respy_old[43:53] = shocks_spec_new_to_old(x_all_econ_eval[43:53])
-
-        np.testing.assert_almost_equal(x_all_econ_eval[43:53][:4], x_all_econ_eval_respy_old[43:53][[0, 4, 7,
-                                                                                         9                                                                                ]])
-
-
-        respy_smm.update_optim_paras(x_all_econ_eval_respy_old)
-        df_smm = self.create_smm_sample(respy_smm)
-        moments_sim = self._get_sim_moments(df_smm)
-
-        stop = time.time()
-        duration = int(stop - start)
-
-        stats_obs, stats_sim = [], []
-        for group in ['Choice Probability', 'Wage Distribution']:
-            for period in range(num_periods):
-
-                if period not in moments_sim[group].keys():
-                    continue
-                if period not in moments_obs[group].keys():
-                    continue
-
-                stats_obs.extend(moments_obs[group][period])
-                stats_sim.extend(moments_sim[group][period])
-
-        # The calculation of the criterion function fails if the not all moments that were
-        # calculated on the observed dataset are also available for the simulated dataset. This
-        # can happen, for example, if nobody in the simulated dataset work in a particular period
-        # and thus no information on the wage distribution is available.
-        stats_diff = np.array(stats_obs) - np.array(stats_sim)
-        try:
-            func = float(np.dot(np.dot(stats_diff, weighing_matrix), stats_diff))
-        except ValueError:
-            warnings.warn('invalid evaluation as not all moments available')
-            func = HUGE_FLOAT
-
-        # We also want to log the choice probabilities for logging purposes.
-        probs_obs, probs_sim = [], []
-        for group in ['Choice Probability']:
-            for period in range(num_periods):
-                if period not in moments_sim[group].keys():
-                    continue
-                if period not in moments_obs[group].keys():
-                    continue
-                probs_obs.extend(moments_obs[group][period])
-                probs_sim.extend(moments_sim[group][period])
-
-        mad = float(np.mean(np.abs(np.array(probs_obs) - np.array(probs_sim))))
-
-        args = [func, mad] + x_all_econ_eval.tolist(), stats_obs, stats_sim, weighing_matrix, \
-               respy_smm, duration
-        self._logging(*args)
-        self.attr['func'] = func
-
-        return func
-
-    @staticmethod
-    def _get_sim_moments(df):
-        """This function computes the moments from a dataset."""
-        return get_moments(df)
-
-    def _logging(self, info_update, stats_obs, stats_sim, weighing_matrix, respy_smm, duration):
-        """This method logs the progress of the estimation."""
-        # Distribute class attributes
-        num_paras = self.attr['num_paras']
-        df_info = self.attr['df_info']
-
-        self.attr['func'] = info_update[0]
-
-        # Initialize empty canvas if required
-        if df_info is None:
-            df_info = dict()
-            df_info['Label'] = ['Criterion', 'MAD'] + [str(i) for i in range(num_paras)]
-            for label in ['Start', 'Step', 'Current']:
-                df_info[label] = info_update
-            df_info = pd.DataFrame(df_info)
-
-        # We set up some basic logging for monitoring.
-        is_step = df_info['Step'][0] >= info_update[0]
-
-        df_info['Current'] = info_update
+    def _check_termination(self):
+        """This method ensures a gentle shutdown."""
         self.attr['num_evals'] += 1
-
-        if is_step:
-            respy_smm.write_out('smm_monitoring.step.ini')
-            df_info['Step'] = info_update
-            self.attr['num_steps'] += 1
-
-        formatters = dict()
-        columns = ['Label', 'Start', 'Step', 'Current']
-        for label in columns:
-            formatters[label] = format_column
-
-        fname = 'smm_monitoring'
-        df_info.to_string(open(fname + '.info', 'w'), index=False, columns=columns,
-                          justify='justify-all', formatters=formatters)
-        df_info.to_pickle(fname + '.pkl')
-        self.attr['df_info'] = df_info
-
-        # We also want to provide some information on each step of the optimizer.
-        fname = 'smm_monitoring.log'
-        if self.attr['num_evals'] == 1:
-            open(fname, 'w').close()
-
-        # TODO: Deal wit huge value of not all moments identifier
-        with open(fname, 'a') as outfile:
-            fmt_ = '    {:<25}\n\n'
-            outfile.write(fmt_.format(*['OVERVIEW']))
-            fmt_ = ' {:>25}{:>25}{:>25}{:>25}\n\n'
-            outfile.write(fmt_.format(*['Evaluation', 'Step', 'Criterion', 'Seconds']))
-            fmt_ = ' {:>25}{:>25}{:>25.5f}{:>25.5f}\n'
-
-            line = [self.attr["num_evals"], self.attr["num_steps"], self.attr["func"], duration]
-            outfile.write(fmt_.format(*line))
-            outfile.write('\n\n')
-
-            # ANd log the value of the free parameters
-            fmt_ = '    {:<25}\n\n'
-            outfile.write(fmt_.format(*['FREE ECONOMICS PARAMETERS']))
-
-            fmt_ = ' {:>25}{:>25}\n\n'
-            line = ['Identifier', 'Value']
-            outfile.write(fmt_.format(*line))
-
-            fmt_ = ' {:>25}{:>25.5f}\n'
-            count = 0
-            for i, value in enumerate(info_update[2:]):
-                if not self.attr['paras_fixed'][i]:
-                    line = [count, value]
-                    outfile.write(fmt_.format(*line))
-
-                    count += 1
-
-            # We want to be able to inspect the moments.
-            fmt_ = '    {:<25}\n\n'
-            outfile.write(fmt_.format(*['MOMENTS']))
-
-            fmt_ = ' {:>25}{:>25}{:>25}{:>25}{:>25}\n\n'
-            labels = ["Identifier", "Observation", "Simulation", 'Difference', 'Weight']
-            outfile.write(fmt_.format(*labels))
-            fmt_ = ' {:>25}{:25.5f}{:25.5f}{:25.5f}{:25.5f}\n'
-
-            if self.attr['func'] != HUGE_FLOAT:
-                for i in range(len(stats_obs)):
-                    diff = np.abs(stats_obs[i] - stats_sim[i])
-                    line = [i, stats_obs[i], stats_sim[i], diff, weighing_matrix[i, i]]
-                    outfile.write(fmt_.format(*line))
-                outfile.write('\n\n')
-
-            outfile.write('\n ' + '-' * 125 + '\n\n')
 
         # We want to keep tight control of the number of evaluations.
         if self.attr['max_evals'] is not None:
@@ -312,6 +234,7 @@ class SimulationBasedEstimationCls(object):
                     pass
                 raise StopIteration
 
-    def get_attr(self, key):
-        """Get attributes."""
-        return self.attr[key]
+    @staticmethod
+    def _get_sim_moments(df):
+        """This function computes the moments from a dataset."""
+        return get_moments(df)

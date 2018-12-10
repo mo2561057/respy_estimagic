@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 import pickle as pkl
 import numpy as np
+from respy_smm.auxiliary_depreciation import shocks_spec_new_to_old
+from respy.pre_processing.model_processing import write_init_file
+from respy.pre_processing.model_processing import read_init_file
 
 import sys
 
@@ -19,7 +22,15 @@ if False:
     from respy_smm import get_moments
     import respy
 
-    respy_obs = respy.RespyCls('debug.respy.ini')
+    init_dict = read_init_file('debug.respy.ini')
+    shock_spec_new = init_dict['SHOCKS']['coeffs']
+    shock_spec_old = shocks_spec_new_to_old(shock_spec_new)
+    init_dict['SHOCKS']['coeffs'] = shock_spec_old
+    write_init_file(init_dict, file_name=".smm.respy.ini")
+    respy_obs = respy.RespyCls('.smm.respy.ini')
+
+
+
 
     respy_obs.simulate()
 
@@ -32,13 +43,13 @@ if False:
     moments_obs = get_moments(df_base, True)
 
 
-weighing_matrix = None #pkl.load(open('weighing.respy.pkl', 'rb'))
-moments_obs = None # pkl.load(open('moments.respy.pkl', 'rb'))
+weighing_matrix = pkl.load(open('weighing.respy.pkl', 'rb'))
+moments_obs = pkl.load(open('moments.respy.pkl', 'rb'))
 
 toolbox = 'nag'
 
 toolbox_spec = dict()
-toolbox_spec['max_evals'] = 1
+toolbox_spec['max_evals'] = 2
 toolbox_spec['algorithm'] = 'bobyqa'
 
 

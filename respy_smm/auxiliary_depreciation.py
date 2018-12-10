@@ -3,6 +3,34 @@ RESPY are completed."""
 import numpy as np
 
 from respy.python.shared.shared_auxiliary import get_optim_paras
+from respy_smm.config_package import DEFAULT_BOUND
+
+
+def process_shocks_bounds(paras_bounds):
+
+    num_paras = len(paras_bounds)
+
+    paras_bounds_new = np.tile(np.nan, (num_paras, 2))
+    for i in range(num_paras):
+        paras_bounds_new[i, :] = paras_bounds[i]
+
+    paras_bounds = paras_bounds_new
+
+    # We need to ensure that standard deviations are positive.
+    stds = paras_bounds[43:47, :]
+    stds[np.isnan(stds[:, 0]), 0] = 0.01
+
+    # We need to ensure that the coefficients fo correlation are bound between -1 and 1.
+    rhos = paras_bounds[47:53, :]
+    for i in range(2):
+        bound = rhos[:, i]
+        bound[np.isnan(bound)] = (-1.0) ** i * -0.99
+
+    # If not set already, all parameters need bounds.
+    paras_bounds[np.isnan(paras_bounds[:, 0]), 0] = -DEFAULT_BOUND
+    paras_bounds[np.isnan(paras_bounds[:, 1]), 1] = +DEFAULT_BOUND
+
+    return paras_bounds
 
 
 def shocks_spec_new_to_old(shock_spec_new):
