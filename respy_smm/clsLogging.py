@@ -2,7 +2,6 @@
 import pandas as pd
 import numpy as np
 
-from respy_smm.config_package import HUGE_FLOAT
 from respy_smm.auxiliary import format_column
 
 

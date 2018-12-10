@@ -3,7 +3,7 @@ RESPY are completed."""
 import numpy as np
 
 from respy.python.shared.shared_auxiliary import get_optim_paras
-from respy_smm.config_package import DEFAULT_BOUND
+from respy_smm import DEFAULT_BOUND
 
 
 def process_shocks_bounds(paras_bounds):
