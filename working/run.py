@@ -32,8 +32,8 @@ if False:
     moments_obs = get_moments(df_base, True)
 
 
-weighing_matrix = pkl.load(open('weighing.respy.pkl', 'rb'))
-moments_obs = pkl.load(open('moments.respy.pkl', 'rb'))
+weighing_matrix = None #pkl.load(open('weighing.respy.pkl', 'rb'))
+moments_obs = None # pkl.load(open('moments.respy.pkl', 'rb'))
 
 toolbox = 'nag'
 

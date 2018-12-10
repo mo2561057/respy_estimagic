@@ -15,6 +15,8 @@ if 'PMI_SIZE' in os.environ.keys():
     except ImportError:
         pass
 
+from respy_smm.auxiliary_depreciation import shocks_spec_new_to_old
+from respy_smm.auxiliary_depreciation import respy_spec_old_to_new
 from respy_smm.auxiliary import get_communicator
 from respy_smm.auxiliary import smm_sample_pyth
 from respy_smm.auxiliary import smm_sample_f2py
@@ -22,16 +24,12 @@ from respy_smm.config_package import HUGE_FLOAT
 from respy_smm.auxiliary import format_column
 from respy_smm.moments import get_moments
 
-from respy.pre_processing.model_processing_auxiliary import _paras_mapping
 from respy.python.shared.shared_auxiliary import replace_missing_values
 from respy.python.solve.solve_auxiliary import pyth_create_state_space
 from respy.python.shared.shared_auxiliary import dist_class_attributes
 from respy.python.shared.shared_constants import TEST_RESOURCES_BUILD
-from respy.python.shared.shared_auxiliary import cholesky_to_coeffs
 from respy.python.shared.shared_constants import DATA_FORMATS_SIM
-from respy.python.shared.shared_auxiliary import extract_cholesky
 from respy.python.shared.shared_constants import DATA_LABELS_SIM
-from respy.python.shared.shared_auxiliary import get_optim_paras
 from respy.python.shared.shared_auxiliary import create_draws
 from respy.python.shared.shared_constants import MISSING_INT
 import respy
@@ -76,11 +74,7 @@ class SimulationBasedEstimationCls(object):
         self.attr['num_steps'] = 0
         self.attr['func'] = None
 
-        # We need to construct sound vectors that are either all economic or all optimizer
-        # parameter values. This is not nicely done with the RESPY routines at all.
-        x_all_econ = get_optim_paras(optim_paras, num_paras, 'all', True)
-        x_all_econ[43:53] = cholesky_to_coeffs(extract_cholesky(x_all_econ)[0])
-        self.attr['x_all_econ_start'] = x_all_econ.copy()
+        self.attr['x_all_econ_start'] = respy_spec_old_to_new(optim_paras, num_paras)
 
     def create_smm_sample(self, respy_obj):
         """This method creates a dataframe for the ..."""
@@ -139,14 +133,7 @@ class SimulationBasedEstimationCls(object):
         respy_base = self.attr['respy_base']
         num_paras = self.attr['num_paras']
 
-        # We first need to undo the scaling exercise.
-        # TODO: This is only needed because of the crazy RESPY setup.
         x_all_econ_eval = x_all_econ_start.copy()
-        paras_fixed_reordered = paras_fixed.copy()
-        paras_fixed = paras_fixed_reordered[:]
-        for old, new in _paras_mapping():
-            paras_fixed[old] = paras_fixed_reordered[new]
-
         j = 0
         for i in range(num_paras):
             if paras_fixed[i]:
@@ -154,12 +141,21 @@ class SimulationBasedEstimationCls(object):
             x_all_econ_eval[i] = x_input[j]
             j += 1
 
-        # We are now simulating a sample based on the updated parameterization.
+        # We are now simulating a sample based on the updated parametrization.
         start = time.time()
 
         respy_smm = copy.deepcopy(respy_base)
-        respy_smm.update_optim_paras(x_all_econ_eval)
 
+
+
+        x_all_econ_eval_respy_old = x_all_econ_eval.copy()
+        x_all_econ_eval_respy_old[43:53] = shocks_spec_new_to_old(x_all_econ_eval[43:53])
+
+        np.testing.assert_almost_equal(x_all_econ_eval[43:53][:4], x_all_econ_eval_respy_old[43:53][[0, 4, 7,
+                                                                                         9                                                                                ]])
+
+
+        respy_smm.update_optim_paras(x_all_econ_eval_respy_old)
         df_smm = self.create_smm_sample(respy_smm)
         moments_sim = self._get_sim_moments(df_smm)
 
@@ -315,3 +311,7 @@ class SimulationBasedEstimationCls(object):
                 except AttributeError:
                     pass
                 raise StopIteration
+
+    def get_attr(self, key):
+        """Get attributes."""
+        return self.attr[key]

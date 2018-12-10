@@ -4,6 +4,9 @@ import subprocess
 import respy
 import sys
 
+from respy_smm.auxiliary_depreciation import shocks_spec_new_to_old
+from respy.pre_processing.model_processing import write_init_file
+from respy.pre_processing.model_processing import read_init_file
 from respy_smm.optimizers.optimizers_nag import run_nag
 from respy_smm.config_package import PACKAGE_DIR
 
@@ -14,8 +17,16 @@ def optimize(init_file, moments_obs, weighing_matrix, toolbox, toolbox_spec):
     if toolbox not in ['nag']:
         raise NotImplementedError
 
+    # TODO: This could also be done in run_nag
+    init_dict = read_init_file(init_file)
 
-    respy_obj = respy.RespyCls(init_file)
+    shock_spec_new = init_dict['SHOCKS']['coeffs']
+    shock_spec_old = shocks_spec_new_to_old(shock_spec_new)
+    init_dict['SHOCKS']['coeffs'] = shock_spec_old
+
+    write_init_file(init_dict, file_name=".smm.respy.ini")
+
+    respy_obj = respy.RespyCls('.smm.respy.ini')
 
     num_procs = respy_obj.get_attr('num_procs')
 

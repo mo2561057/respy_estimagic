@@ -8,16 +8,11 @@ if 'PMI_SIZE' in os.environ.keys():
         pass
 
 from respy.python.solve.solve_auxiliary import pyth_calculate_rewards_systematic
-from respy.pre_processing.model_processing_auxiliary import _paras_mapping
 from respy.python.solve.solve_auxiliary import pyth_backward_induction
 from respy.python.shared.shared_auxiliary import dist_class_attributes
-from respy.python.shared.shared_auxiliary import cholesky_to_coeffs
-from respy.python.shared.shared_auxiliary import extract_cholesky
-from respy.python.shared.shared_auxiliary import get_optim_paras
 from respy.fortran.interface import write_resfort_initialization
 from respy.python.simulate.simulate_python import pyth_simulate
 from respy.python.shared.shared_constants import ROOT_DIR
-import respy
 
 
 from respy_smm.src import smm_interface
@@ -42,29 +37,6 @@ def moments_dict_to_list(moments_dict):
         for period in sorted(moments_dict[group].keys()):
             moments_list.extend(moments_dict[group][period])
     return moments_list
-
-
-def get_starting_values_econ(fname):
-    """This function returns the starting values from the class instance."""
-    respy_base = respy.RespyCls(fname)
-    optim_paras, num_paras = dist_class_attributes(respy_base, 'optim_paras', 'num_paras')
-
-    x_all_econ = get_optim_paras(optim_paras, num_paras, 'all', True)
-    x_all_econ[43:53] = cholesky_to_coeffs(extract_cholesky(x_all_econ)[0])
-
-    # TODO: This is only needed because of the crazy RESPY setup.
-    paras_fixed_reordered = optim_paras['paras_fixed'].copy()
-    paras_fixed = paras_fixed_reordered[:]
-    for old, new in _paras_mapping():
-        paras_fixed[old] = paras_fixed_reordered[new]
-
-    x_free_econ_start = list()
-    for i, value in enumerate(x_all_econ):
-        if paras_fixed[i]:
-            continue
-        x_free_econ_start.append(value)
-
-    return x_free_econ_start
 
 
 def smm_sample_pyth(state_space_info, disturbances, respy_obj):
