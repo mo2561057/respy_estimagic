@@ -1,12 +1,6 @@
 """This module contains supporting functions for the SMM estimation."""
 import os
 
-if 'PMI_SIZE' in os.environ.keys():
-    try:
-        from mpi4py import MPI
-    except ImportError:
-        pass
-
 from respy.python.solve.solve_auxiliary import pyth_calculate_rewards_systematic
 from respy.python.solve.solve_auxiliary import pyth_backward_induction
 from respy.python.shared.shared_auxiliary import dist_class_attributes
@@ -14,8 +8,13 @@ from respy.fortran.interface import write_resfort_initialization
 from respy.python.simulate.simulate_python import pyth_simulate
 from respy.python.shared.shared_constants import ROOT_DIR
 
-
 from respy_smm.src import smm_interface
+
+if 'PMI_SIZE' in os.environ.keys():
+    try:
+        from mpi4py import MPI
+    except ImportError:
+        pass
 
 
 def format_column(x):
@@ -42,10 +41,10 @@ def smm_sample_pyth(state_space_info, disturbances, respy_obj):
     periods_draws_emax, periods_draws_sims = disturbances
 
     num_periods, edu_spec, optim_paras, num_draws_emax, is_debug, is_interpolated, \
-    num_points_interp, is_myopic, num_agents_sim, num_agents_est, seed_sim, file_sim, num_types, \
+    num_points_interp, is_myopic, num_agents_sim, seed_sim, file_sim, num_types, \
     is_myopic = dist_class_attributes(respy_obj, 'num_periods', 'edu_spec', 'optim_paras',
         'num_draws_emax', 'is_debug', 'is_interpolated', 'num_points_interp', 'is_myopic',
-        'num_agents_sim', 'num_agents_est', 'seed_sim', 'file_sim', 'num_types', 'is_myopic')
+        'num_agents_sim', 'seed_sim', 'file_sim', 'num_types', 'is_myopic')
 
     args = (num_periods, states_number_period, states_all, max_states_period, optim_paras)
     periods_rewards_systematic = pyth_calculate_rewards_systematic(*args)
