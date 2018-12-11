@@ -2,6 +2,9 @@
 import pandas as pd
 import numpy as np
 
+from respy.pre_processing.model_processing import convert_attr_dict_to_init_dict
+from respy_smm.auxiliary_depreciation import respy_spec_old_to_new
+from respy.pre_processing.model_processing import write_init_file
 from respy_smm.auxiliary import format_column
 
 
@@ -59,7 +62,13 @@ class LoggingCls(object):
         self.attr['num_evals'] += 1
 
         if is_step:
-            respy_smm.write_out('smm_monitoring.step.ini')
+
+            # TODO: This is required due to the different setup of the shock specification.
+            #  Later, we can call respy_obj.write_out() again.
+            init_dict = convert_attr_dict_to_init_dict(respy_smm.attr)
+            x_all_econ_start = respy_spec_old_to_new(respy_smm.attr['optim_paras'])
+            init_dict['SHOCKS']['coeffs'] = x_all_econ_start[43:55]
+            write_init_file(init_dict, 'smm_monitoring.step.ini')
             df_info['Step'] = info_update
             self.attr['num_steps'] += 1
 
