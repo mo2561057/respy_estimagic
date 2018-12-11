@@ -7,13 +7,13 @@ from respy_smm import DEFAULT_BOUND
 
 
 def process_shocks_bounds(paras_bounds):
-
+    """This function ensures that proper bounds are set of the standard deviations and the
+    coefficients of correlation."""
     num_paras = len(paras_bounds)
 
     paras_bounds_new = np.tile(np.nan, (num_paras, 2))
     for i in range(num_paras):
         paras_bounds_new[i, :] = paras_bounds[i]
-
     paras_bounds = paras_bounds_new
 
     # We need to ensure that standard deviations are positive.
@@ -34,9 +34,9 @@ def process_shocks_bounds(paras_bounds):
 
 
 def shocks_spec_new_to_old(shock_spec_new):
-
-    sds = shock_spec_new[:4]
-    rho = shock_spec_new[4:]
+    """This function transfers the specification of the shocks from the new setup to the original
+    one."""
+    sds, rho = shock_spec_new[:4], shock_spec_new[4:]
 
     shocks_cov = np.zeros((4, 4))
 
@@ -61,9 +61,9 @@ def shocks_spec_new_to_old(shock_spec_new):
     return shock_spec_old
 
 
-# TODO: Can I better align the interfaces to the two functions, this is now a all out preacemen t?
-def respy_spec_old_to_new(optim_paras, num_paras):
-
+def respy_spec_old_to_new(optim_paras):
+    """This function transfers the specification of the shocks from the old setup to the new one."""
+    num_paras = len(optim_paras['paras_fixed'])
     x_all_econ_start = get_optim_paras(optim_paras, num_paras, 'all', True)
     shocks_cov = optim_paras['shocks_cholesky'].dot(optim_paras['shocks_cholesky'].T)
 

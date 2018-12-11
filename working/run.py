@@ -6,6 +6,7 @@ from respy.pre_processing.model_processing import write_init_file
 from respy.pre_processing.model_processing import read_init_file
 
 import sys
+import os
 
 sys.path.insert(0, '../')
 
@@ -15,7 +16,7 @@ import respy_smm
 np.random.seed(123)
 
 # This is some setup required for the Monte Carlo exercise.
-if False:
+if not os.path.exists("moments.respy.pkl"):
 
     from respy_smm import get_weighing_matrix
     from respy.pre_processing.data_processing import process_dataset

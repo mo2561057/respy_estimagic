@@ -33,21 +33,21 @@ def optimize(init_file, moments_obs, weighing_matrix, toolbox, toolbox_spec):
         raise SystemExit(' ... correlation matrix not positive semidefinite')
 
     write_init_file(init_dict, file_name=".smm.respy.ini")
-
     respy_obj = respy.RespyCls('.smm.respy.ini')
 
-    num_procs = respy_obj.get_attr('num_procs')
-
     try:
-        if num_procs == 1:
+
+        if respy_obj.get_attr('num_procs') == 1:
+
             run_nag(init_file, moments_obs, weighing_matrix, toolbox_spec)
+
         else:
 
             infos = dict()
-            infos['init_file'] = init_file
-            infos['moments_obs'] = moments_obs
             infos['weighing_matrix'] = weighing_matrix
             infos['toolbox_spec'] = toolbox_spec
+            infos['moments_obs'] = moments_obs
+            infos['init_file'] = init_file
 
             pkl.dump(infos, open('.infos.respy_smm.pkl', 'wb'))
 
@@ -55,6 +55,7 @@ def optimize(init_file, moments_obs, weighing_matrix, toolbox, toolbox_spec):
             subprocess.check_call(cmd)
 
     except StopIteration:
+
         pass
 
     rslt = pkl.load(open('smm_monitoring.pkl', 'rb'))

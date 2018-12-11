@@ -44,10 +44,10 @@ class SimulationBasedEstimationCls(object):
 
         respy_base = respy.RespyCls(init_file)
 
-        num_paras, optim_paras, num_procs, num_periods, is_debug, seed_emax, seed_sim, \
+        optim_paras, num_procs, num_periods, is_debug, seed_emax, seed_sim, \
         num_draws_emax, num_agents_sim, num_types, edu_spec, version = dist_class_attributes(
-            respy_base, 'num_paras', 'optim_paras', 'num_procs', 'num_periods', 'is_debug',
-            'seed_emax', 'seed_sim', 'num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec',
+            respy_base, 'optim_paras', 'num_procs', 'num_periods', 'is_debug', 'seed_emax',
+            'seed_sim', 'num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec',
             'version')
 
         if num_procs > 1:
@@ -61,18 +61,18 @@ class SimulationBasedEstimationCls(object):
         self.attr = dict()
         self.attr['mpi_setup'] = worker
 
-        self.attr['x_all_econ_start'] = respy_spec_old_to_new(optim_paras, num_paras)
-        self.attr['paras_fixed'] = optim_paras['paras_fixed']
+        self.attr['x_all_econ_start'] = respy_spec_old_to_new(optim_paras)
+        self.attr['paras_free'] = ~np.array(optim_paras['paras_fixed'])
         self.attr['weighing_matrix'] = weighing_matrix
         self.attr['moments_obs'] = moments_obs
         self.attr['num_periods'] = num_periods
         self.attr['respy_base'] = respy_base
-        self.attr['num_paras'] = num_paras
         self.attr['max_evals'] = max_evals
         self.attr['num_evals'] = 0
         self.attr['func'] = None
 
-        logger_obj.setup_information(num_paras, max_evals, optim_paras['paras_fixed'])
+        args = [weighing_matrix, max_evals, optim_paras['paras_fixed']]
+        logger_obj.setup_information(*args)
 
     def criterion(self, x_input):
         """This function evaluates the criterion function for a candidate parametrization."""
@@ -80,18 +80,12 @@ class SimulationBasedEstimationCls(object):
         x_all_econ_start = self.attr['x_all_econ_start']
         weighing_matrix = self.attr['weighing_matrix']
         num_periods = self.attr['num_periods']
-        paras_fixed = self.attr['paras_fixed']
         moments_obs = self.attr['moments_obs']
+        paras_free = self.attr['paras_free']
         respy_base = self.attr['respy_base']
-        num_paras = self.attr['num_paras']
 
         x_all_econ_eval = x_all_econ_start.copy()
-        j = 0
-        for i in range(num_paras):
-            if paras_fixed[i]:
-                continue
-            x_all_econ_eval[i] = x_input[j]
-            j += 1
+        x_all_econ_eval[paras_free] = x_input
 
         # We are now simulating a sample based on the updated parametrization.
         start = time.time()
@@ -159,28 +153,26 @@ class SimulationBasedEstimationCls(object):
 
         mad = float(np.mean(np.abs(np.array(probs_obs) - np.array(probs_sim))))
 
-        args = []
-        args += [[func, mad] + x_all_econ_eval.tolist(), stats_obs, stats_sim]
-        args += [weighing_matrix, respy_smm, duration]
+        args = [[func, mad] + x_all_econ_eval.tolist(), stats_obs, stats_sim, respy_smm, duration]
         logger_obj.record(*args)
 
         self.attr['func'] = func
-
+        print(func)
         self._check_termination()
 
         return func
 
     def create_smm_sample(self, respy_obj):
-        """This method creates a dataframe for the ..."""
+        """This method creates a dataframe for the evaluation of the criterion function."""
         # We need to incur the proper setup cost.
         if self.simulate_sample is None:
 
             worker = self.attr['mpi_setup']
 
-            num_paras, num_procs, num_periods, is_debug, seed_emax, seed_sim, num_draws_emax, \
-            num_agents_sim, num_types, edu_spec, version = dist_class_attributes(respy_obj,
-                'num_paras', 'num_procs', 'num_periods', 'is_debug', 'seed_emax', 'seed_sim',
-                'num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec', 'version')
+            num_procs, num_periods, is_debug, seed_emax, seed_sim, num_draws_emax, num_agents_sim,\
+            num_types, edu_spec, version = dist_class_attributes(respy_obj, 'num_procs',
+                'num_periods', 'is_debug', 'seed_emax', 'seed_sim', 'num_draws_emax',
+                'num_agents_sim', 'num_types', 'edu_spec', 'version')
 
             periods_draws_emax = create_draws(num_periods, num_draws_emax, seed_emax, is_debug)
             periods_draws_sims = create_draws(num_periods, num_agents_sim, seed_sim, is_debug)

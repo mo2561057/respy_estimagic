@@ -10,21 +10,23 @@ class LoggingCls(object):
     def __init__(self):
 
         self.attr = dict()
+        self.attr['weighing_matrix'] = None
         self.attr['paras_fixed'] = None
         self.attr['num_paras'] = None
         self.attr['df_info'] = None
         self.attr['num_evals'] = 0
         self.attr['num_steps'] = 0
 
-    def setup_information(self, num_paras, max_evals, paras_fixed):
-
-        logger_obj.attr['paras_fixed'] = paras_fixed
-        self.attr['num_paras'] = num_paras
+    def setup_information(self, weighing_matrix, max_evals, paras_fixed):
+        """This method attaches some information that is constant for an estimation run but
+        useful for further processing."""
+        self.attr['weighing_matrix'] = weighing_matrix
+        self.attr['paras_fixed'] = paras_fixed
         self.attr['max_evals'] = max_evals
 
     @staticmethod
     def record_abort_eval(msg):
-        """This method logs the early termination of """
+        """This method logs the early termination of an evaluation."""
         with open("smm_monitoring.log", 'a') as outfile:
             fmt_ = '    {:<25}\n\n'
             outfile.write(fmt_.format(*['WARNING']))
@@ -32,11 +34,13 @@ class LoggingCls(object):
             outfile.write(fmt_.format(msg))
             outfile.write('\n ' + '-' * 125 + '\n\n')
 
-    def record(self, info_update, stats_obs, stats_sim, weighing_matrix, respy_smm, duration):
+    def record(self, info_update, stats_obs, stats_sim, respy_smm, duration):
         """This method logs the progress of the estimation."""
-        # Distribute class attributes
-        num_paras = self.attr['num_paras']
+        # Distribute class attributes and construct auxiliary objects.
+        weighing_matrix = self.attr['weighing_matrix']
+        paras_fixed = self.attr['paras_fixed']
         df_info = self.attr['df_info']
+        num_paras = len(paras_fixed)
 
         self.attr['func'] = info_update[0]
 
@@ -97,7 +101,7 @@ class LoggingCls(object):
             fmt_ = ' {:>25}{:>25.5f}\n'
             count = 0
             for i, value in enumerate(info_update[2:]):
-                if not self.attr['paras_fixed'][i]:
+                if not paras_fixed[i]:
                     line = [count, value]
                     outfile.write(fmt_.format(*line))
 
