@@ -157,7 +157,6 @@ class SimulationBasedEstimationCls(object):
         logger_obj.record(*args)
 
         self.attr['func'] = func
-        print(func)
         self._check_termination()
 
         return func
