@@ -1,8 +1,14 @@
 """This module contains functions that will be depreciated once the scheduled improvements in
 RESPY are completed."""
+import os
+
 import numpy as np
 
+from respy.python.shared.shared_auxiliary import coeffs_to_cholesky
+from respy.pre_processing.model_processing import write_init_file
+from respy.pre_processing.model_processing import read_init_file
 from respy.python.shared.shared_auxiliary import get_optim_paras
+from respy.clsRespy import RespyCls
 from respy_smm import DEFAULT_BOUND
 
 
@@ -79,3 +85,25 @@ def respy_spec_old_to_new(optim_paras):
     x_all_econ_start[43:53] = np.concatenate((sds, rho))
 
     return x_all_econ_start
+
+
+def respy_ini_new_to_old(init_file, is_keep=False):
+    """This function creates a new initialization file that allows to read it directly with the
+    core RESPY package"""
+    init_dict = read_init_file(init_file)
+
+    shock_spec_new = init_dict['SHOCKS']['coeffs']
+    shock_spec_old = shocks_spec_new_to_old(shock_spec_new)
+    init_dict['SHOCKS']['coeffs'] = shock_spec_old
+
+    try:
+        coeffs_to_cholesky(shock_spec_old)
+    except np.linalg.linalg.LinAlgError:
+        raise SystemExit(' ... correlation matrix not positive semidefinite')
+
+    write_init_file(init_dict, file_name=".smm.respy.ini")
+    respy_obj = RespyCls('.smm.respy.ini')
+    if not is_keep:
+        os.unlink('.smm.respy.ini')
+
+    return respy_obj
