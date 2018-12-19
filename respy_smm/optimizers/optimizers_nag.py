@@ -35,18 +35,33 @@ def run_nag(fname, moments_obs, weighing_matrix, toolbox_spec):
     # We lock in one evaluation at the starting values.
     est_obj.criterion(x_free_econ_start)
 
-    # TODO: This is a temporary bugfix for the fact that rhobeg is not set as outlined in the
-    #   documentation. This is already noted in the CHANGELOG and will be available shortly.
-    scaling_within_bounds, rhobeg = True, 0.1
-
     if algorithm == 'bobyqa':
         solve = pybobyqa.solve
     elif algorithm == 'dfols':
         solve = dfols.solve
 
+    # The NAG algorithms do not appear to check whether the staring values are actually inside the
+    # bounds.
+    for i in range(len(x_free_econ_start)):
+        start, bound = x_free_econ_start[i], box[i, :]
+        if not bound[0] < start < bound[1]:
+            msg = '... starting value for parameter {:} out of bounds'.format(i)
+            raise AssertionError(msg)
+
+    # TODO: This is a temporary bugfix for the fact that rhobeg is not set as outlined in the
+    #   documentation. This is already noted in the CHANGELOG and will be available shortly.
+    scaling_within_bounds, rhobeg = True, 0.1
+
+    # TODO: This is a first attempt to, at least over time, uncouple the interfaces. Meaning that
+    #  users can just rely on the documentation to the optimizers and head down the specifications.
+    kwargs = dict()
+    kwargs['scaling_within_bounds'] = scaling_within_bounds
+    kwargs['bounds'] = (box[:, 0], box[:, 1])
+    kwargs['objfun_has_noise'] = True
+    kwargs['maxfun'] = HUGE_INT
+    kwargs['rhobeg'] = rhobeg
+
     try:
-        solve(est_obj.criterion, x_free_econ_start, bounds=(box[:, 0], box[:, 1]), maxfun=HUGE_INT,
-              scaling_within_bounds=scaling_within_bounds, rhobeg=rhobeg,
-              objfun_has_noise=True)
+        solve(est_obj.criterion, x_free_econ_start, **kwargs)
     except StopIteration:
         pass

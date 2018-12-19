@@ -12,12 +12,11 @@ if __name__ == "__main__":
     infos = pkl.load(open('.infos.respy_smm.pkl', 'rb'))
     os.remove('.infos.respy_smm.pkl')
 
-    weighing_matrix = infos['weighing_matrix']
-    toolbox_spec = infos['toolbox_spec']
-    moments_obs = infos['moments_obs']
-    init_file = infos['init_file']
+    args = list()
+    for label in ['init_file', 'moments_obs', 'weighing_matrix', 'toolbox_spec']:
+        args += infos[label]
 
     try:
-        run_nag(init_file, moments_obs, weighing_matrix, toolbox_spec)
+        run_nag(*args)
     except StopIteration:
         pass

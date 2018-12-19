@@ -16,9 +16,12 @@ def get_ingredients(fname):
 
     respy_obj = RespyCls(fname)
 
+    labels = list()
+    labels += ['num_periods', 'edu_spec', 'optim_paras', 'num_draws_emax', 'num_agents_sim']
+    labels += ['num_draws_prob', 'num_types']
+
     num_periods, edu_spec, optim_paras, num_draws_emax, num_agents_sim, num_draws_prob, \
-    num_types = dist_class_attributes(respy_obj, 'num_periods', 'edu_spec', 'optim_paras',
-        'num_draws_emax', 'num_agents_sim', 'num_draws_prob', 'num_types')
+        num_types = dist_class_attributes(respy_obj, *labels)
 
     max_draws = max(num_agents_sim, num_draws_emax, num_draws_prob)
     write_types(optim_paras['type_shares'], num_agents_sim)

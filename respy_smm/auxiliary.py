@@ -40,11 +40,14 @@ def smm_sample_pyth(state_space_info, disturbances, respy_obj):
     states_all, states_number_period, mapping_state_idx, max_states_period = state_space_info
     periods_draws_emax, periods_draws_sims = disturbances
 
+    labels = list()
+    labels += ['num_periods', 'edu_spec', 'optim_paras', 'num_draws_emax', 'is_debug']
+    labels += ['is_interpolated', 'num_points_interp', 'is_myopic', 'num_agents_sim', 'seed_sim']
+    labels += ['file_sim', 'num_types', 'is_myopic']
+
     num_periods, edu_spec, optim_paras, num_draws_emax, is_debug, is_interpolated, \
-    num_points_interp, is_myopic, num_agents_sim, seed_sim, file_sim, num_types, \
-    is_myopic = dist_class_attributes(respy_obj, 'num_periods', 'edu_spec', 'optim_paras',
-        'num_draws_emax', 'is_debug', 'is_interpolated', 'num_points_interp', 'is_myopic',
-        'num_agents_sim', 'seed_sim', 'file_sim', 'num_types', 'is_myopic')
+        num_points_interp, is_myopic, num_agents_sim, seed_sim, file_sim, num_types, is_myopic = \
+        dist_class_attributes(respy_obj, *labels)
 
     args = (num_periods, states_number_period, states_all, max_states_period, optim_paras)
     periods_rewards_systematic = pyth_calculate_rewards_systematic(*args)
@@ -54,8 +57,8 @@ def smm_sample_pyth(state_space_info, disturbances, respy_obj):
         is_debug, is_interpolated, num_points_interp, edu_spec, optim_paras, file_sim, False)
     periods_emax = pyth_backward_induction(*args)
 
-    args = (periods_rewards_systematic, mapping_state_idx, periods_emax, states_all,
-        num_periods, num_agents_sim, periods_draws_sims, seed_sim, file_sim, edu_spec, optim_paras,
+    args = (periods_rewards_systematic, mapping_state_idx, periods_emax, states_all, num_periods,
+        num_agents_sim, periods_draws_sims, seed_sim, file_sim, edu_spec, optim_paras,
         num_types, is_debug)
     dat = pyth_simulate(*args)
 
@@ -67,11 +70,14 @@ def smm_sample_f2py(state_space_info, disturbances, slavecomm_f2py, respy_obj):
     estimation for the RESPY package."""
     periods_draws_emax, periods_draws_sims = disturbances
 
+    labels = list()
+    labels += ['num_periods', 'edu_spec', 'optim_paras', 'num_draws_emax', 'is_debug']
+    labels += ['is_interpolated', 'num_points_interp', 'is_myopic', 'num_agents_sim', "num_paras"]
+    labels += ['num_procs']
+
     num_periods, edu_spec, optim_paras, num_draws_emax, is_debug, is_interpolated, \
-    num_points_interp, is_myopic, num_agents_sim, num_paras, num_procs = dist_class_attributes(
-        respy_obj, 'num_periods', 'edu_spec', 'optim_paras', 'num_draws_emax', 'is_debug',
-        'is_interpolated', 'num_points_interp', 'is_myopic', 'num_agents_sim', "num_paras",
-        'num_procs')
+        num_points_interp, is_myopic, num_agents_sim, num_paras, num_procs = \
+        dist_class_attributes(respy_obj, *labels)
 
     shocks_cholesky = optim_paras['shocks_cholesky']
     coeffs_common = optim_paras['coeffs_common']
@@ -97,14 +103,18 @@ def smm_sample_f2py(state_space_info, disturbances, slavecomm_f2py, respy_obj):
 
 def get_communicator(respy_obj):
     """This is a temporary function that sets up the communicator."""
+
+    labels = list()
+    labels += ['optim_paras', 'num_periods', 'edu_spec', 'is_debug', 'num_draws_emax']
+    labels += ['seed_emax', 'is_interpolated', 'num_points_interp', 'is_myopic', 'tau']
+    labels += ['num_procs', 'num_agents_sim', 'num_draws_prob', 'seed_prob', 'seed_sim']
+    labels += ['optimizer_options',  'optimizer_used', 'maxfun', 'precond_spec', 'file_sim']
+    labels += ['num_paras', 'num_types', 'num_agents_est']
+
     optim_paras, num_periods, edu_spec, is_debug, num_draws_emax, seed_emax, is_interpolated, \
-    num_points_interp, is_myopic, tau, num_procs, num_agents_sim, num_draws_prob, \
-    seed_prob, seed_sim, optimizer_options, optimizer_used, maxfun, precond_spec, \
-    file_sim, num_paras, num_types, num_agents_est = dist_class_attributes(respy_obj,
-        'optim_paras', 'num_periods', 'edu_spec', 'is_debug', 'num_draws_emax', 'seed_emax',
-        'is_interpolated', 'num_points_interp', 'is_myopic', 'tau', 'num_procs', 'num_agents_sim',
-        'num_draws_prob', 'seed_prob', 'seed_sim', 'optimizer_options',  'optimizer_used',
-        'maxfun', 'precond_spec', 'file_sim', 'num_paras', 'num_types', 'num_agents_est')
+        num_points_interp, is_myopic, tau, num_procs, num_agents_sim, num_draws_prob, \
+        seed_prob, seed_sim, optimizer_options, optimizer_used, maxfun, precond_spec, \
+        file_sim, num_paras, num_types, num_agents_est = dist_class_attributes(respy_obj, *labels)
 
     args = (optim_paras, is_interpolated, num_draws_emax, num_periods, num_points_interp,
         is_myopic, edu_spec, is_debug, num_draws_prob, num_agents_sim, seed_prob, seed_emax,

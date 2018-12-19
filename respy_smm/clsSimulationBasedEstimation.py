@@ -44,11 +44,14 @@ class SimulationBasedEstimationCls(object):
 
         respy_base = respy.RespyCls(init_file)
 
-        optim_paras, num_procs, num_periods, is_debug, seed_emax, seed_sim, \
-        num_draws_emax, num_agents_sim, num_types, edu_spec, version = dist_class_attributes(
-            respy_base, 'optim_paras', 'num_procs', 'num_periods', 'is_debug', 'seed_emax',
-            'seed_sim', 'num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec',
-            'version')
+        labels = list()
+        labels += ['optim_paras', 'num_procs', 'num_periods', 'is_debug', 'seed_emax']
+        labels += ['seed_sim', 'num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec']
+        labels += ['version']
+
+        optim_paras, num_procs, num_periods, is_debug, seed_emax, seed_sim, num_draws_emax, \
+            num_agents_sim, num_types, edu_spec, version = \
+            dist_class_attributes(respy_base, *labels)
 
         if num_procs > 1:
             assert 'PMI_SIZE' in os.environ.keys()
@@ -168,10 +171,12 @@ class SimulationBasedEstimationCls(object):
 
             worker = self.attr['mpi_setup']
 
+            labels = list()
+            labels += ['num_procs', 'num_periods', 'is_debug', 'seed_emax', 'seed_sim']
+            labels += ['num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec', 'version']
+
             num_procs, num_periods, is_debug, seed_emax, seed_sim, num_draws_emax, num_agents_sim,\
-            num_types, edu_spec, version = dist_class_attributes(respy_obj, 'num_procs',
-                'num_periods', 'is_debug', 'seed_emax', 'seed_sim', 'num_draws_emax',
-                'num_agents_sim', 'num_types', 'edu_spec', 'version')
+            num_types, edu_spec, version = dist_class_attributes(respy_obj, *labels)
 
             periods_draws_emax = create_draws(num_periods, num_draws_emax, seed_emax, is_debug)
             periods_draws_sims = create_draws(num_periods, num_agents_sim, seed_sim, is_debug)

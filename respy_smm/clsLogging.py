@@ -113,7 +113,6 @@ class LoggingCls(object):
                 if not paras_fixed[i]:
                     line = [count, value]
                     outfile.write(fmt_.format(*line))
-
                     count += 1
 
             # We want to be able to inspect the moments.
