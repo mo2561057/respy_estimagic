@@ -59,6 +59,8 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, m
 
     ! Ensure that there is no problem with the repeated allocation of the containers.
     IF (ALLOCATED(periods_rewards_systematic)) DEALLOCATE(periods_rewards_systematic)
+    IF (ALLOCATED(optim_paras%type_shifts)) DEALLOCATE(optim_paras%type_shares)
+    IF (ALLOCATED(optim_paras%type_shifts)) DEALLOCATE(optim_paras%type_shifts)
     IF (ALLOCATED(states_number_period)) DEALLOCATE(states_number_period)
     IF (ALLOCATED(mapping_state_idx)) DEALLOCATE(mapping_state_idx)
     IF (ALLOCATED(edu_spec%lagged)) DEALLOCATE(edu_spec%lagged)
@@ -67,13 +69,16 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, m
     IF (ALLOCATED(periods_emax)) DEALLOCATE(periods_emax)
     IF (ALLOCATED(states_all)) DEALLOCATE(states_all)
 
-    ! TODO: Can we get rid of the need to DEALLOCATE and ALLOCATE in the interfaces by a more proper respy setup? These are all containers that get allocated during state space creation which is only called once outside of this interface.
+    ! TODO: Can we get rid of the need to DEALLOCATE and ALLOCATE in the interfaces by a more proper respy setup? These are all containers that get allocated in
     ALLOCATE(states_number_period(num_periods_int))
     ALLOCATE(mapping_state_idx(num_periods_int, num_periods_int, num_periods_int, edu_max + 1, 4, SIZE(type_spec_shifts, 1)))
     ALLOCATE(states_all(num_periods_int, max_states_period_int, 5))
     ALLOCATE(edu_spec%lagged(SIZE(edu_start)))
     ALLOCATE(edu_spec%start(SIZE(edu_start)))
     ALLOCATE(edu_spec%share(SIZE(edu_start)))
+
+    ALLOCATE(optim_paras%type_shifts(SIZE(type_spec_shifts, 1), 4))
+    ALLOCATE(optim_paras%type_shares(SIZE(type_spec_shifts, 1) * 2))
 
     !# Transfer global RESFORT variables
     states_all = states_all_int(:, 1:MAXVAL(states_number_period_int), :)
