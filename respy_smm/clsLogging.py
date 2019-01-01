@@ -1,4 +1,5 @@
 """This module hosts the logging capabilities of the package."""
+import pickle as pkl
 import pandas as pd
 import numpy as np
 
@@ -17,14 +18,21 @@ class LoggingCls(object):
         self.attr['paras_fixed'] = None
         self.attr['num_paras'] = None
         self.attr['df_info'] = None
+        self.attr['num_steps'] = -1
         self.attr['num_evals'] = 0
-        self.attr['num_steps'] = 0
+
+        self.attr['info_dict'] = dict()
+        self.attr['info_dict']['is_step'] = np.empty(0, dtype='bool')
+        self.attr['info_dict']['fval'] = np.empty((0, 0))
+        self.attr['info_dict']['paras'] = None
 
     def setup_information(self, weighing_matrix, max_evals, paras_fixed):
         """This method attaches some information that is constant for an estimation run but
         useful for further processing."""
+        self.attr['paras_fixed'] = np.array(paras_fixed)
+        self.attr['num_free'] = sum(~self.attr['paras_fixed'])
         self.attr['weighing_matrix'] = weighing_matrix
-        self.attr['paras_fixed'] = paras_fixed
+        self.attr['num_paras'] = len(paras_fixed)
         self.attr['max_evals'] = max_evals
 
     @staticmethod
@@ -42,8 +50,8 @@ class LoggingCls(object):
         # Distribute class attributes and construct auxiliary objects.
         weighing_matrix = self.attr['weighing_matrix']
         paras_fixed = self.attr['paras_fixed']
+        num_paras = self.attr['num_paras']
         df_info = self.attr['df_info']
-        num_paras = len(paras_fixed)
 
         self.attr['func'] = info_update[0]
 
@@ -93,7 +101,7 @@ class LoggingCls(object):
             outfile.write(fmt_.format(*['OVERVIEW']))
             fmt_ = ' {:>25}{:>25}{:>25}{:>25}\n\n'
             outfile.write(fmt_.format(*['Evaluation', 'Step', 'Criterion', 'Seconds']))
-            fmt_ = ' {:>25}{:>25}{:>25.5f}{:>25.5f}\n'
+            fmt_ = ' {:>25}{:>25}{:>25.5f}{:>25}\n'
 
             line = [self.attr["num_evals"], self.attr["num_steps"], self.attr["func"], duration]
             outfile.write(fmt_.format(*line))
@@ -131,6 +139,25 @@ class LoggingCls(object):
             outfile.write('\n\n')
 
             outfile.write('\n ' + '-' * 125 + '\n\n')
+
+        # TODO: Prototyping better diagnostics in an external ipython notebook. At the moment we
+        #  store information on all evaluations but might need to reduce in the future as we
+        #  write out a complete file each time.
+        if True:
+            if self.attr['info_dict']['paras'] is None:
+                self.attr['info_dict']['paras'] = np.empty((self.attr['num_free'], 1))
+
+            a, b = self.attr['info_dict']['is_step'], is_step
+            self.attr['info_dict']['is_step'] = np.append(a, b)
+
+            a, b = self.attr['info_dict']['fval'], self.attr['func']
+            self.attr['info_dict']['fval'] = np.append(a, b)
+
+            a = self.attr['info_dict']['paras']
+            b = np.array(info_update[2:], ndmin=2).T[~self.attr['paras_fixed']]
+            self.attr['info_dict']['paras'] = np.concatenate((a, b), axis=1)
+
+            pkl.dump(self.attr['info_dict'], open('smm_monitoring.all.pkl', 'wb'))
 
 
 logger_obj = LoggingCls()
