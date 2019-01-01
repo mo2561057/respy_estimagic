@@ -145,7 +145,7 @@ class LoggingCls(object):
         #  write out a complete file each time.
         if True:
             if self.attr['info_dict']['paras'] is None:
-                self.attr['info_dict']['paras'] = np.empty((self.attr['num_free'], 1))
+                self.attr['info_dict']['paras'] = np.empty((self.attr['num_free'], 0))
 
             a, b = self.attr['info_dict']['is_step'], is_step
             self.attr['info_dict']['is_step'] = np.append(a, b)
