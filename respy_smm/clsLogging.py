@@ -30,7 +30,7 @@ class LoggingCls(object):
         """This method attaches some information that is constant for an estimation run but
         useful for further processing."""
         self.attr['paras_fixed'] = np.array(paras_fixed)
-        self.attr['num_free'] = sum(~self.attr['paras_fixed'])
+        self.attr['num_free'] = (~self.attr['paras_fixed']).sum()
         self.attr['weighing_matrix'] = weighing_matrix
         self.attr['num_paras'] = len(paras_fixed)
         self.attr['max_evals'] = max_evals

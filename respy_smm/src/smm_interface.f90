@@ -119,7 +119,9 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, m
     CALL fort_calculate_rewards_systematic(periods_rewards_systematic, num_periods, states_number_period, states_all, max_states_period, optim_paras)
 
     IF(SLAVECOMM_F2PY .NE. MISSING_INT) THEN
-
+        ! TODO: The resulting simulated dataset is not unaffected by the number of processors as
+        !   the random draws for the EMAX approximation are different. This needs to be properly
+        !   set up later as well.
         ALLOCATE(periods_emax(num_periods, max_states_period))
 
         CALL MPI_Bcast(2, 1, MPI_INT, MPI_ROOT, SLAVECOMM_F2PY, ierr)

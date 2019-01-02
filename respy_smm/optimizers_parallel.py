@@ -14,7 +14,7 @@ if __name__ == "__main__":
 
     args = list()
     for label in ['init_file', 'moments_obs', 'weighing_matrix', 'toolbox_spec']:
-        args += infos[label]
+        args.append(infos[label])
 
     try:
         run_nag(*args)
