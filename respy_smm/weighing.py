@@ -9,6 +9,9 @@ from respy_smm.moments import get_moments
 
 def get_weighing_matrix(df_base, num_boots, num_agents_smm, is_store=False):
     """This function constructs the weighing matrix."""
+    # Ensure reproducibility
+    np.random.seed(123)
+
     # Distribute clear baseline information.
     index_base = df_base.index.get_level_values('Identifier').unique()
     num_periods = df_base['Period'].nunique()
@@ -51,22 +54,22 @@ def get_weighing_matrix(df_base, num_boots, num_agents_smm, is_store=False):
     for moments_boot in moments_sample:
         stats.append(moments_dict_to_list(moments_boot))
 
-    moments_std = np.array(stats).T.std(axis=1)
+    moments_var = np.array(stats).T.var(axis=1)
 
     # We need to deal with the case that the standard deviation for the choice probabilities. This
     # can happen for some of the choice probabilities. In particular early in the life-cycle
     # there is nobody working for example. At the moment, we simply replace them with the weight
     # of an average moment.
-    moments_std_prob = moments_std[:num_periods * 4]
-    is_zero = moments_std_prob <= 1e-10
-    moments_std_prob[is_zero] = np.mean(ma.masked_array(moments_std_prob, mask=is_zero))
+    moments_var_prob = moments_var[:num_periods * 4]
+    is_zero = moments_var_prob <= 1e-10
+    moments_var_prob[is_zero] = np.mean(ma.masked_array(moments_var_prob, mask=is_zero))
 
     if np.all(is_zero):
-        raise NotImplementedError('... all standard deviations are zero')
+        raise NotImplementedError('... all variances are zero')
     if np.any(is_zero):
-        print('... some standard deviations are zero')
+        print('... some variances are zero')
 
-    weighing_matrix = np.diag(moments_std ** (-1))
+    weighing_matrix = np.diag(moments_var ** (-1))
 
     # Store information for further processing and inspection.
     if is_store:
