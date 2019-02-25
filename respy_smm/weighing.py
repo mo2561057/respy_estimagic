@@ -62,7 +62,10 @@ def get_weighing_matrix(df_base, num_boots, num_agents_smm, is_store=False):
     # grid of potential final schooling levels and fill it with zeros if not observed in the
     # data. We just replace it with the weight of an average moment.
     is_zero = moments_var <= 1e-10
-    moments_var[is_zero] = np.mean(ma.masked_array(moments_var, mask=is_zero))
+
+    # TODO: As this only applies to the moments that are bounded between zero and one,
+    #  this number comes up if I calculate the variance of random uniform variables.
+    moments_var[is_zero] = 0.1
 
     if np.all(is_zero):
         raise NotImplementedError('... all variances are zero')
