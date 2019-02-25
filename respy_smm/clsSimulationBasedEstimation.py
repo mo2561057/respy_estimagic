@@ -123,6 +123,11 @@ class SimulationBasedEstimationCls(object):
         #  this transformation?
         stats_obs, stats_sim = [], []
 
+        # TODO: There needs to be ONE function that constructs the arrays from the moment
+        #  dictionaries which ensures that this is always done the same way. Otherwise,
+        #  this introduces the problem that, for example, the weights do not align with the
+        #  moments because they were extracted in different order.
+
         # TODO: We need special treatment for the moments of the wage distribution because these
         #  might not be available if no individual is working in some time period. Thus,
         #  the period information might or might not be available during an estimation.

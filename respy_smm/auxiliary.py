@@ -16,8 +16,6 @@ if 'PMI_SIZE' in os.environ.keys():
     except ImportError:
         pass
 
-MOMENT_GROUPS = ['Choice Probability', 'Wage Distribution', 'Final Schooling']
-
 
 def format_column(x):
     """This function provides pretty floats for the columns."""
@@ -30,7 +28,7 @@ def format_column(x):
 def moments_dict_to_list(moments_dict):
     """This function constructs a list of available moments based on the moment dictionary."""
     moments_list = []
-    for group in moments_dict.keys():
+    for group in ['Wage Distribution', 'Choice Probability', 'Final Schooling']:
         for period in sorted(moments_dict[group].keys()):
             moments_list.extend(moments_dict[group][period])
     return moments_list

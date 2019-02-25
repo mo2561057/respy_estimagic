@@ -5,13 +5,11 @@ import json
 
 import pandas as pd
 
-from respy_smm.auxiliary import MOMENT_GROUPS
-
 
 def get_moments(df, is_store=False):
     """This function computes the moments based on a dataframe."""
     moments = dict()
-    for group in MOMENT_GROUPS:
+    for group in ['Wage Distribution', 'Choice Probability', 'Final Schooling']:
         moments[group] = dict()
 
     # We first compute the information about choice probabilities. We need to address the case
