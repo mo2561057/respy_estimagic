@@ -119,8 +119,14 @@ class SimulationBasedEstimationCls(object):
         stop = time.time()
         duration = int(stop - start)
 
+        # TODO: Now we move all moments from a dictionary to an array. Is there a way to avoid
+        #  this transformation?
         stats_obs, stats_sim = [], []
-        for group in ['Choice Probability', 'Wage Distribution']:
+
+        # TODO: We need special treatment for the moments of the wage distribution because these
+        #  might not be available if no individual is working in some time period. Thus,
+        #  the period information might or might not be available during an estimation.
+        for group in ['Wage Distribution']:
             for period in range(num_periods):
 
                 if period not in moments_sim[group].keys():
@@ -130,6 +136,11 @@ class SimulationBasedEstimationCls(object):
 
                 stats_obs.extend(moments_obs[group][period])
                 stats_sim.extend(moments_sim[group][period])
+
+        for group in ['Choice Probability', 'Final Schooling']:
+            for key_ in moments_obs[group].keys():
+                stats_obs.extend(moments_obs[group][key_])
+                stats_sim.extend(moments_sim[group][key_])
 
         # The calculation of the criterion function fails if the not all moments that were
         # calculated on the observed dataset are also available for the simulated dataset. This

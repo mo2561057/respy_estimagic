@@ -16,6 +16,8 @@ if 'PMI_SIZE' in os.environ.keys():
     except ImportError:
         pass
 
+MOMENT_GROUPS = ['Choice Probability', 'Wage Distribution', 'Final Schooling']
+
 
 def format_column(x):
     """This function provides pretty floats for the columns."""
