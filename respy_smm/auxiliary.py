@@ -30,7 +30,7 @@ def format_column(x):
 def moments_dict_to_list(moments_dict):
     """This function constructs a list of available moments based on the moment dictionary."""
     moments_list = []
-    for group in ['Choice Probability', 'Wage Distribution']:
+    for group in moments_dict.keys():
         for period in sorted(moments_dict[group].keys()):
             moments_list.extend(moments_dict[group][period])
     return moments_list

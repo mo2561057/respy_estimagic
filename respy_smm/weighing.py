@@ -56,13 +56,13 @@ def get_weighing_matrix(df_base, num_boots, num_agents_smm, is_store=False):
 
     moments_var = np.array(stats).T.var(axis=1)
 
-    # We need to deal with the case that the standard deviation for the choice probabilities. This
-    # can happen for some of the choice probabilities. In particular early in the life-cycle
-    # there is nobody working for example. At the moment, we simply replace them with the weight
-    # of an average moment.
-    moments_var_prob = moments_var[:num_periods * 4]
-    is_zero = moments_var_prob <= 1e-10
-    moments_var_prob[is_zero] = np.mean(ma.masked_array(moments_var_prob, mask=is_zero))
+    # We need to deal with the case that the variance for some moments is zero. This can happen
+    # for example for the choice probabilities if early in the lifecycle nobody is working. This
+    # will happen with the current setup of the final schooling moments, where we simply create a
+    # grid of potential final schooling levels and fill it with zeros if not observed in the
+    # data. We just replace it with the weight of an average moment.
+    is_zero = moments_var <= 1e-10
+    moments_var[is_zero] = np.mean(ma.masked_array(moments_var, mask=is_zero))
 
     if np.all(is_zero):
         raise NotImplementedError('... all variances are zero')
