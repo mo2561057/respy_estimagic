@@ -29,6 +29,11 @@ class LoggingCls(object):
     def setup_information(self, weighing_matrix, max_evals, paras_fixed):
         """This method attaches some information that is constant for an estimation run but
         useful for further processing."""
+
+        # This ensures that we start with a fresh instance of the singelton. Otherwise, we might
+        # work with one from a previous run that is started in the same module.
+        self.__init__()
+
         self.attr['paras_fixed'] = np.array(paras_fixed)
         self.attr['num_free'] = (~self.attr['paras_fixed']).sum()
         self.attr['weighing_matrix'] = weighing_matrix

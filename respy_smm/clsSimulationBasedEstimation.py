@@ -157,6 +157,7 @@ class SimulationBasedEstimationCls(object):
         except ValueError:
             msg = 'invalid evaluation due to missing moments'
             logger_obj.record_abort_eval(msg)
+            self._check_termination()
             return HUGE_FLOAT
 
         # We also want to log the choice probabilities for logging purposes.
