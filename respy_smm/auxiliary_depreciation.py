@@ -9,6 +9,7 @@ from respy.pre_processing.model_processing import write_init_file
 from respy.pre_processing.model_processing import read_init_file
 from respy.python.shared.shared_auxiliary import get_optim_paras
 from respy.clsRespy import RespyCls
+
 from respy_smm import DEFAULT_BOUND
 
 
@@ -87,7 +88,7 @@ def respy_spec_old_to_new(optim_paras):
     return x_all_econ_start
 
 
-def respy_ini_new_to_old(init_file, is_keep=False):
+def respy_obj_from_new_init(init_file, is_keep=False, file_name='.smm.respy.ini'):
     """This function creates a new initialization file that allows to read it directly with the
     core RESPY package"""
     init_dict = read_init_file(init_file)
@@ -101,9 +102,38 @@ def respy_ini_new_to_old(init_file, is_keep=False):
     except np.linalg.linalg.LinAlgError:
         raise SystemExit(' ... correlation matrix not positive semidefinite')
 
-    write_init_file(init_dict, file_name=".smm.respy.ini")
-    respy_obj = RespyCls('.smm.respy.ini')
+    write_init_file(init_dict, file_name=file_name)
+    respy_obj = RespyCls(file_name)
+
     if not is_keep:
-        os.unlink('.smm.respy.ini')
+        os.unlink(file_name)
 
     return respy_obj
+
+
+def respy_ini_old_to_new(init_file, is_keep=False, file_name='.smm.respy.ini'):
+    """This function creates a new initialization file that allows to read it directly with the
+    core RESPY package"""
+    init_dict = read_init_file(init_file)
+
+    respy_obj = RespyCls(init_file)
+
+    # TODO: This is another case where the interface is flawed
+    optim_paras = respy_obj.get_attr('optim_paras')
+    init_dict['SHOCKS']['coeffs'] = respy_spec_old_to_new(optim_paras)[43:53]
+    write_init_file(init_dict, file_name)
+    if not is_keep:
+        os.unlink(file_name)
+
+    return respy_obj
+
+
+def x_all_econ_new_to_old(x_all_econ_new):
+    x_all_econ_old = x_all_econ_new.copy()
+    x_all_econ_old[43:53] = shocks_spec_new_to_old(x_all_econ_new[43:53])
+
+    # We need to pass in the Cholesky factor.
+    shocks_cholesky = coeffs_to_cholesky(x_all_econ_old[43:53])
+    x_all_econ_old[43:53] = shocks_cholesky[np.tril_indices(4)]
+
+    return x_all_econ_old

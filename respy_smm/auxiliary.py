@@ -1,12 +1,13 @@
 """This module contains supporting functions for the SMM estimation."""
 import os
 
-from respy.python.solve.solve_auxiliary import pyth_calculate_rewards_systematic
-from respy.python.solve.solve_auxiliary import pyth_backward_induction
+import numpy as np
+
+from respy.pre_processing.data_processing import process_dataset
 from respy.python.shared.shared_auxiliary import dist_class_attributes
 from respy.fortran.interface import write_resfort_initialization
-from respy.python.simulate.simulate_python import pyth_simulate
-from respy.python.shared.shared_constants import ROOT_DIR
+from respy.python.shared.shared_constants import ROOT_DIR, HUGE_FLOAT
+from respy_smm.auxiliary_depreciation import respy_obj_from_new_init
 
 from respy_smm.src import smm_interface
 
@@ -23,46 +24,6 @@ def format_column(x):
         return '{}'.format(x)
     else:
         return '{:25.5f}'.format(x)
-
-
-def moments_dict_to_list(moments_dict):
-    """This function constructs a list of available moments based on the moment dictionary."""
-    moments_list = []
-    for group in ['Wage Distribution', 'Choice Probability', 'Final Schooling']:
-        for period in sorted(moments_dict[group].keys()):
-            moments_list.extend(moments_dict[group][period])
-    return moments_list
-
-
-def smm_sample_pyth(state_space_info, disturbances, respy_obj):
-    """This function is a wrapper that is supposed to facilitate the application of SMM
-    estimation for the RESPY package."""
-    states_all, states_number_period, mapping_state_idx, max_states_period = state_space_info
-    periods_draws_emax, periods_draws_sims = disturbances
-
-    labels = list()
-    labels += ['num_periods', 'edu_spec', 'optim_paras', 'num_draws_emax', 'is_debug']
-    labels += ['is_interpolated', 'num_points_interp', 'is_myopic', 'num_agents_sim', 'seed_sim']
-    labels += ['file_sim', 'num_types', 'is_myopic']
-
-    num_periods, edu_spec, optim_paras, num_draws_emax, is_debug, is_interpolated, \
-        num_points_interp, is_myopic, num_agents_sim, seed_sim, file_sim, num_types, is_myopic = \
-        dist_class_attributes(respy_obj, *labels)
-
-    args = (num_periods, states_number_period, states_all, max_states_period, optim_paras)
-    periods_rewards_systematic = pyth_calculate_rewards_systematic(*args)
-
-    args = (num_periods, is_myopic, max_states_period, periods_draws_emax, num_draws_emax,
-        states_number_period, periods_rewards_systematic, mapping_state_idx, states_all,
-        is_debug, is_interpolated, num_points_interp, edu_spec, optim_paras, file_sim, False)
-    periods_emax = pyth_backward_induction(*args)
-
-    args = (periods_rewards_systematic, mapping_state_idx, periods_emax, states_all, num_periods,
-        num_agents_sim, periods_draws_sims, seed_sim, file_sim, edu_spec, optim_paras,
-        num_types, is_debug)
-    dat = pyth_simulate(*args)
-
-    return dat
 
 
 def smm_sample_f2py(state_space_info, disturbances, slavecomm_f2py, respy_obj):
@@ -103,7 +64,6 @@ def smm_sample_f2py(state_space_info, disturbances, slavecomm_f2py, respy_obj):
 
 def get_communicator(respy_obj):
     """This is a temporary function that sets up the communicator."""
-
     labels = list()
     labels += ['optim_paras', 'num_periods', 'edu_spec', 'is_debug', 'num_draws_emax']
     labels += ['seed_emax', 'is_interpolated', 'num_points_interp', 'is_myopic', 'tau']
@@ -130,3 +90,32 @@ def get_communicator(respy_obj):
     worker = MPI.COMM_SELF.Spawn(test, info=info, maxprocs=num_procs - 1)
 
     return worker
+
+
+def is_valid_covariance_matrix(shocks_coeffs_new):
+    sds, rho = shocks_coeffs_new[:4], shocks_coeffs_new[4:]
+
+    shocks_cov = np.zeros((4, 4))
+
+    shocks_cov[1, 0] = rho[0] * sds[1] * sds[0]
+    shocks_cov[2, 0] = rho[1] * sds[2] * sds[0]
+    shocks_cov[2, 1] = rho[2] * sds[2] * sds[1]
+    shocks_cov[3, 0] = rho[3] * sds[3] * sds[0]
+    shocks_cov[3, 1] = rho[4] * sds[3] * sds[1]
+    shocks_cov[3, 2] = rho[5] * sds[3] * sds[2]
+
+    np.fill_diagonal(shocks_cov, sds ** 2)
+
+    shocks_cov = shocks_cov + shocks_cov.T - np.diag(shocks_cov.diagonal())
+    try:
+        np.linalg.cholesky(shocks_cov)
+        return True
+    except np.linalg.linalg.LinAlgError:
+        return False
+
+
+def get_processed_dataset(init_file):
+    respy_obj = respy_obj_from_new_init(init_file)
+    data_array = process_dataset(respy_obj).values
+    data_array[np.isnan(data_array)] = HUGE_FLOAT
+    return data_array

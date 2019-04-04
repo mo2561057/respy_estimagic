@@ -1,4 +1,5 @@
 import warnings
+import sys
 import os
 
 from numpy import f2py
@@ -19,6 +20,10 @@ HUGE_INT = 1000000000
 HUGE_FLOAT = 1e15
 
 DEFAULT_BOUND = 1e8
+
+# This is a temporary fix that allows to import the F2PY function from respy.
+from respy.python.shared.shared_constants import TEST_RESOURCES_BUILD
+sys.path.insert(0, TEST_RESOURCES_BUILD)
 
 
 # We need to manage our warnings
@@ -61,8 +66,3 @@ try:
     from respy_smm.src import smm_interface
 except (ModuleNotFoundError, ImportError) as e:
     compile_f2py(IS_DEBUG)
-
-
-from respy_smm.optimizers_interface import optimize
-from respy_smm.weighing import get_weighing_matrix
-from respy_smm.moments import get_moments

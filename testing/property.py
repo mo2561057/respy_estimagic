@@ -1,19 +1,18 @@
-import random
-import os
+#!/usr/bin/env python
+"""This script runs the regression tests."""
+import argparse
 
-import numpy as np
+from ose_utils.testing import run_property_tests
+import respy_smm.tests
 
-from respy_smm.tests import test_integration
-from respy_smm.tests import test_smm
+if __name__ == '__main__':
+
+    parser = argparse.ArgumentParser(description='Run property tests')
+
+    parser.add_argument('-m', '--minutes', type=float, help='minutes', default=1)
+
+    args = parser.parse_args()
+
+    run_property_tests(respy_smm.tests, args.minutes)
 
 
-while True:
-
-    seed = random.randrange(1, 100000)
-    print('\n', seed, '\n\n')
-
-    np.random.seed(seed)
-
-    for test in [test_integration.test_1, test_smm.test_1]:
-        os.system('git clean -df')
-        test()

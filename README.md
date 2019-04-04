@@ -1,2 +1,3 @@
-# respy_smm
-auxiliary routines to run SMM estimations using respy
+# respy_estimagic
+
+This is a set of wrappers to extract all things related to the optimizatio from the core code.

@@ -1,4 +1,10 @@
-"""This module hosts the logging capabilities of the package."""
+"""This module hosts the logging capabilities of the package.
+
+    TODO:
+        * At the moment it is cumbersome to find the best evaluation in the smm_monitoring.log
+        file. This needs to be addressed when this file is modified the next time.
+
+"""
 import pickle as pkl
 import pandas as pd
 import numpy as np
@@ -43,7 +49,7 @@ class LoggingCls(object):
     @staticmethod
     def record_abort_eval(msg):
         """This method logs the early termination of an evaluation."""
-        with open("smm_monitoring.log", 'a') as outfile:
+        with open("monitoring.estimagic.log", 'a') as outfile:
             fmt_ = '    {:<25}\n\n'
             outfile.write(fmt_.format(*['WARNING']))
             fmt_ = '    - {:>25}\n'

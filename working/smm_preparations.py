@@ -1,10 +1,19 @@
 """This module contains all functions that allow to construct the weighing matrix."""
-import numpy.ma as ma
-import pickle as pkl
+from collections import OrderedDict
 import numpy as np
+import pickle as pkl
+import json
 
-from respy_smm.auxiliary import moments_dict_to_list
-from respy_smm.moments import get_moments
+import pandas as pd
+
+
+def moments_dict_to_list(moments_dict):
+    """This function constructs a list of available moments based on the moment dictionary."""
+    moments_list = []
+    for group in moments_dict.keys():
+        for period in moments_dict[group].keys():
+            moments_list.extend(moments_dict[group][period])
+    return moments_list
 
 
 def get_weighing_matrix(df_base, num_boots, num_agents_smm, is_store=False):
@@ -14,7 +23,6 @@ def get_weighing_matrix(df_base, num_boots, num_agents_smm, is_store=False):
 
     # Distribute clear baseline information.
     index_base = df_base.index.get_level_values('Identifier').unique()
-    num_periods = df_base['Period'].nunique()
     moments_base = get_moments(df_base)
     num_boots_max = num_boots * 2
 
@@ -81,3 +89,55 @@ def get_weighing_matrix(df_base, num_boots, num_agents_smm, is_store=False):
         pkl.dump(weighing_matrix, open(fname + 'pkl', 'wb'))
 
     return weighing_matrix
+
+
+def get_moments(df, is_store=False):
+    """This function computes the moments based on a dataframe."""
+    moments = OrderedDict()
+    for group in ['Wage Distribution', 'Choice Probability', 'Final Schooling']:
+        moments[group] = OrderedDict()
+
+    # We now add descriptive statistics of the wage distribution. Note that there might be
+    # periods where there is no information available. In this case, it is simply not added to
+    # the dictionary.
+    info = df['Wage'].groupby('Period').describe().to_dict()
+    for period in sorted(df['Period'].unique().tolist()):
+        if pd.isnull(info['std'][period]):
+            continue
+        moments['Wage Distribution'][period] = []
+        for label in ['mean', 'std']:
+            moments['Wage Distribution'][period].append(info[label][period])
+
+    # We first compute the information about choice probabilities. We need to address the case
+    # that a particular choice is not taken at all in a period and then these are not included in
+    # the dictionary. This cannot be addressed by using categorical variables as the categories
+    # without a value are not included after the groupby operation.
+    info = df['Choice'].groupby('Period').value_counts(normalize=True).to_dict()
+    for period in sorted(df['Period'].unique().tolist()):
+        moments['Choice Probability'][period] = []
+        for choice in range(1, 5):
+            try:
+                stat = info[(period, choice)]
+            except KeyError:
+                stat = 0.00
+            moments['Choice Probability'][period].append(stat)
+
+    # We add the relative share of the final levels of schooling. Note that we simply loop over a
+    # large range of maximal schooling levels to avoid the need to pass any further details from
+    # the package to the function such as the initial and maximal level of education at this point.
+    info = df['Years_Schooling'].groupby('Identifier').max().value_counts(normalize=True).to_dict()
+    for edu_max in range(30):
+        try:
+            stat = info[edu_max]
+        except KeyError:
+            stat = 0
+        moments['Final Schooling'][edu_max] = [stat]
+
+    # We might want to store the data from the moments calculation for transfer to a different
+    # estimation machine.
+    if is_store:
+        fname = 'moments.respy.'
+        json.dump(moments, open(fname + 'json', 'w'), indent=4, sort_keys=True)
+        pkl.dump(moments, open(fname + 'pkl', 'wb'))
+
+    return moments
