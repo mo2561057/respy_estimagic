@@ -4,8 +4,6 @@
 * parallel regression tests
 * start age handling
 
---> assess with old results and then merge into master
-
 ## Challenges
 
 A main challenge arises as the set of VALID MOMENTS might be different between the observed data and the simulated data. In addition, the set of VALID MOMENTS for the simulated data also potentially varies during the estimation. As an example, consider the descriptives of the wage by period. If for a given parameterization there is nobody working, then these are simply not defined.
