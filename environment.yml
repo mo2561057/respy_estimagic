@@ -12,6 +12,7 @@ dependencies:
   - matplotlib
   - jupyter
   - jupyterlab
+  - pip
   - pip:
     - Py-BOBYQA
     - DFO-LS

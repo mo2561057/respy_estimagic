@@ -34,9 +34,9 @@ class EstimationCls(object):
 
         # We need to set up containers for logging our progress.
         self.info = OrderedDict()
-        self.info['x_econ_all'] = list()
-        self.info['is_step'] = list()
-        self.info['fval'] = list()
+        self.info['is_step'] = np.empty(0, dtype=np.bool)
+        self.info['x_econ_all'] = np.empty(0)
+        self.info['fval'] = np.empty(0)
 
     def construct_complete_parameters(self, x_free_econ):
         x_all_econ_current = self.x_all_econ['start'].copy()
@@ -112,9 +112,12 @@ class EstimationCls(object):
             outfile.write('\n')
 
         # We also need a pickle for some more information for monitoring the estimation.
-        self.info['x_econ_all'] += [self.x_all_econ['current']]
-        self.info['fval'] += [self.fval['current']]
-        self.info['is_step'] += [is_step]
+        if self.info['x_econ_all'].shape == (0, ):
+            self.info['x_econ_all'] = np.empty(self.x_all_econ['current'].shape)
+
+        self.info['x_econ_all'] = np.vstack([self.info['x_econ_all'], self.x_all_econ['current']])
+        self.info['fval'] = np.hstack([self.info['fval'], self.fval['current']])
+        self.info['is_step'] = np.hstack([self.info['is_step'], is_step])
 
         pkl.dump(self.info, open('monitoring.estimagic.pkl', 'wb'))
 
