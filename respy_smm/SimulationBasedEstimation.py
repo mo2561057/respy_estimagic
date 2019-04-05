@@ -128,10 +128,11 @@ class SimulationBasedEstimationCls(EstimationCls):
 
     def _logging_smm(self, stats_obs, stats_sim):
         """This method contains logging capabilities that are just relevant for the SMM routine."""
-        if self.is_start and os.path.exists('monitoring.estimagic.smm.info'):
-            os.unlink('monitoring.estimagic.smm.info')
+        fname = 'monitoring.estimagic.smm.info'
+        if self.num_evals and os.path.exists(fname):
+            os.unlink(fname)
 
-        with open('monitoring.estimagic.smm.info', 'a+') as outfile:
+        with open(fname, 'a+') as outfile:
 
             fmt_ = '\n\n{:>8}{:>15}\n\n'
             outfile.write(fmt_.format('EVALUATION', self.num_evals))
