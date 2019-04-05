@@ -60,6 +60,7 @@ class EstimationCls(object):
         if is_step:
             self.x_all_econ['step'] = x_all_econ_current
             self.fval['step'] = fval
+            self.num_steps += 1
 
         self.monitoring(is_step)
 
