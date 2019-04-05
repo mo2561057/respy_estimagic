@@ -48,6 +48,7 @@ class MaximumLikelihoodEstimationCls(EstimationCls):
         np.testing.assert_equal(np.isnan(fval), False)
 
         self.wrapping_up_evaluation(x_all_econ_current, fval)
+        self.check_termination()
 
         return fval
 

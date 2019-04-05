@@ -64,8 +64,6 @@ class EstimationCls(object):
 
         self.monitoring(is_step)
 
-        self.check_termination()
-
     def check_termination(self):
         is_termination = self.num_evals >= self.max_evals
         if is_termination:

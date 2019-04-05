@@ -106,7 +106,6 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, &
     ! TODO: This needs to be integrated in the new NORPY initialization file.
     start_age = 17
 
-
     optim_paras%shocks_cholesky = shocks_cholesky
     optim_paras%coeffs_common = coeffs_common
     optim_paras%coeffs_home = coeffs_home

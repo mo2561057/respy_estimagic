@@ -95,6 +95,7 @@ class SimulationBasedEstimationCls(EstimationCls):
 
         self.wrapping_up_evaluation(x_all_econ_current, fval)
         self._logging_smm(stats_obs, stats_sim)
+        self.check_termination()
 
         return fval
 
