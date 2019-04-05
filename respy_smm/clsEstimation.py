@@ -2,13 +2,13 @@ from collections import OrderedDict
 import pickle as pkl
 import copy
 
-from mpi4py import MPI
 import numpy as np
 
 from respy_smm.auxiliary_depreciation import shocks_spec_new_to_old
 from respy_smm.auxiliary_depreciation import respy_spec_old_to_new
 from respy_smm.auxiliary_depreciation import respy_ini_old_to_new
 from respy_smm.auxiliary import get_communicator
+from respy_smm.auxiliary import get_mpi
 
 from respy.python.shared.shared_constants import MISSING_INT
 from respy.python.shared.shared_constants import HUGE_FLOAT
@@ -72,6 +72,7 @@ class EstimationCls(object):
 
     def terminate(self, is_gentle=False):
         if hasattr(self.mpi_setup, 'Bcast'):
+            MPI = get_mpi()
             cmd = np.array(1, dtype='int32')
             self.mpi_setup.Bcast([cmd, MPI.INT], root=MPI.ROOT)
         if not is_gentle:

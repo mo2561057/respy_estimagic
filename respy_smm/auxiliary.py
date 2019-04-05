@@ -11,11 +11,14 @@ from respy_smm.auxiliary_depreciation import respy_obj_from_new_init
 
 from respy_smm.src import smm_interface
 
-if 'PMI_SIZE' in os.environ.keys():
+
+def get_mpi():
+    """This function returns the MPI connector (if possible)"""
     try:
         from mpi4py import MPI
+        return MPI
     except ImportError:
-        pass
+        return None
 
 
 def format_column(x):
@@ -83,6 +86,7 @@ def get_communicator(respy_obj):
 
     write_resfort_initialization(*args)
 
+    MPI = get_mpi()
     info = MPI.Info.Create()
     info.Set('wdir', os.getcwd())
 
