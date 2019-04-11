@@ -65,7 +65,7 @@ def smm_sample_f2py(state_space_info, disturbances, slavecomm_f2py, respy_obj):
     return dat
 
 
-def get_communicator(respy_obj):
+def get_communicator(respy_obj, data_array=None):
     """This is a temporary function that sets up the communicator."""
     labels = list()
     labels += ['optim_paras', 'num_periods', 'edu_spec', 'is_debug', 'num_draws_emax']
@@ -82,7 +82,7 @@ def get_communicator(respy_obj):
     args = (optim_paras, is_interpolated, num_draws_emax, num_periods, num_points_interp,
         is_myopic, edu_spec, is_debug, num_draws_prob, num_agents_sim, seed_prob, seed_emax,
         tau, num_procs, 'simulate', seed_sim, optimizer_options, optimizer_used, maxfun, num_paras,
-        precond_spec, file_sim, None, num_types, num_agents_est)
+        precond_spec, file_sim, data_array, num_types, num_agents_est)
 
     write_resfort_initialization(*args)
 

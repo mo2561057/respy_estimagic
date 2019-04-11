@@ -54,31 +54,24 @@ os.chdir('../')
 os.chdir('working')
 
 # We need to specify the basics of the optimization problem.
-init_file, max_evals = 'debug.respy.ini', 2
+init_file, max_evals = 'debug.respy.ini', 1
 moments_obs, weighing_matrix = prepare_debugging_setup(init_file)
 # --------------------------------------------------------------------------------------------------
 # GENERAL setup for optimization problems, https://en.wikipedia.org/wiki/Adapter_pattern
 # --------------------------------------------------------------------------------------------------
-print('\n I need to add ability to restart \n')
-
 args = (init_file, moments_obs, weighing_matrix, get_moments, max_evals)
 adapter_smm = SimulationBasedEstimationCls(*args)
 
 args = (init_file, max_evals)
-adapter_mle = MaximumLikelihoodEstimationCls(*args)
+try:
+    adapter_mle = MaximumLikelihoodEstimationCls(*args)
+except StopIteration:
+    info_parallel = pkl.load(open('monitoring.estimagic.pkl', 'rb'))['fval']
 
-for est_obj in [adapter_smm, adapter_mle]:
-    # ----------------------------------------------------------------------------------------------
-    # SPECIFIC setup for the optimizer
-    # ----------------------------------------------------------------------------------------------
-    box = get_box_bounds(init_file)
+args = ('debug.respy.scalar.ini', max_evals)
+try:
+    adapter_mle = MaximumLikelihoodEstimationCls(*args)
+except StopIteration:
+    info_scalar = pkl.load(open('monitoring.estimagic.pkl', 'rb'))['fval']
 
-    kwargs = dict()
-    kwargs['scaling_within_bounds'] = True
-    kwargs['bounds'] = (box[:, 0], box[:, 1])
-    kwargs['objfun_has_noise'] = True
-    kwargs['maxfun'] = 10e6
-
-    rslt = wrapper_pybobyqa(est_obj.evaluate, est_obj.x_free_econ_start, **kwargs)
-
-    print('finished estimation \n')
+np.testing.assert_equal(info_parallel, info_parallel)

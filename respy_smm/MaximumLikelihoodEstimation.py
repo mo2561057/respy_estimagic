@@ -85,6 +85,19 @@ class MaximumLikelihoodEstimationCls(EstimationCls):
         else:
             slavecomm = self.mpi_setup.py2f()
 
+            from mpi4py import MPI
+            for i in range(num_periods):
+                for j in range(num_draws_emax):
+                    self.mpi_setup.Bcast([periods_draws_emax[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
+
+            for i in range(num_periods):
+                for j in range(num_draws_prob):
+                    self.mpi_setup.Bcast([periods_draws_prob[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
+
+            data = np.ascontiguousarray(self.data_array, np.float64)
+            for i in range(self.data_array.shape[0]):
+                self.mpi_setup.Bcast([data[i, :], MPI.DOUBLE], root=MPI.ROOT)
+
         args = list()
         args += [is_interpolated, num_draws_emax, num_periods, num_points_interp, is_myopic]
         args += [is_debug, self.data_array, num_draws_prob, tau, periods_draws_emax]
