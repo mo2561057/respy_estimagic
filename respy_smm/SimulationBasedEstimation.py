@@ -106,9 +106,10 @@ class SimulationBasedEstimationCls(EstimationCls):
         labels = list()
         labels += ['num_procs', 'num_periods', 'is_debug', 'seed_emax', 'seed_sim']
         labels += ['num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec', 'version']
-
+        labels += ['num_draws_prob', 'seed_prob']
         num_procs, num_periods, is_debug, seed_emax, seed_sim, num_draws_emax, num_agents_sim, \
-        num_types, edu_spec, version = dist_class_attributes(self.respy_base, *labels)
+        num_types, edu_spec, version, num_draws_prob, seed_prob = \
+            dist_class_attributes(self.respy_base, *labels)
 
         periods_draws_emax = create_draws(num_periods, num_draws_emax, seed_emax, is_debug)
         periods_draws_sims = create_draws(num_periods, num_agents_sim, seed_sim, is_debug)
@@ -123,6 +124,21 @@ class SimulationBasedEstimationCls(EstimationCls):
             slavecomm = self.mpi_setup
         else:
             slavecomm = self.mpi_setup.py2f()
+
+            periods_draws_prob = create_draws(num_periods, num_draws_prob, seed_prob, is_debug)
+
+            from mpi4py import MPI
+            for i in range(num_periods):
+                for j in range(num_draws_emax):
+                    self.mpi_setup.Bcast([periods_draws_emax[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
+
+            for i in range(num_periods):
+                for j in range(num_draws_prob):
+                    self.mpi_setup.Bcast([periods_draws_prob[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
+
+            data = np.random.uniform(size=64).reshape(8, 8)
+            for i in range(data.shape[0]):
+                self.mpi_setup.Bcast([data[i, :], MPI.DOUBLE], root=MPI.ROOT)
 
         self.simulate_sample = partial(smm_sample_f2py, state_space_info, disturbances, slavecomm)
 

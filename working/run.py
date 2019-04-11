@@ -59,18 +59,19 @@ moments_obs, weighing_matrix = prepare_debugging_setup(init_file)
 # --------------------------------------------------------------------------------------------------
 # GENERAL setup for optimization problems, https://en.wikipedia.org/wiki/Adapter_pattern
 # --------------------------------------------------------------------------------------------------
-args = (init_file, moments_obs, weighing_matrix, get_moments, max_evals)
-adapter_smm = SimulationBasedEstimationCls(*args)
+args_mle = (init_file, max_evals)
+args_smm = (init_file, moments_obs, weighing_matrix, get_moments, max_evals)
 
-args = (init_file, max_evals)
 try:
-    adapter_mle = MaximumLikelihoodEstimationCls(*args)
+    SimulationBasedEstimationCls(*args_smm)
 except StopIteration:
     info_parallel = pkl.load(open('monitoring.estimagic.pkl', 'rb'))['fval']
 
-args = ('debug.respy.scalar.ini', max_evals)
+args_mle = ('debug.respy.scalar.ini', max_evals)
+args_smm = ('debug.respy.scalar.ini', moments_obs, weighing_matrix, get_moments, max_evals)
+
 try:
-    adapter_mle = MaximumLikelihoodEstimationCls(*args)
+    SimulationBasedEstimationCls(*args_smm)
 except StopIteration:
     info_scalar = pkl.load(open('monitoring.estimagic.pkl', 'rb'))['fval']
 

@@ -85,6 +85,9 @@ def get_random_init(constr=dict()):
     # first.
     constr_respy = copy.deepcopy(constr)
     constr_respy.pop('flag_agents_equality', None)
+    constr_respy.pop('num_procs', None)
+
+    constr_respy['version'] = 'FORTRAN'
     init_dict = generate_init(constr_respy)
 
     # This constraint is not part of the original RESPY coded.
@@ -92,10 +95,15 @@ def get_random_init(constr=dict()):
         if constr['flag_agents_equality'] is True:
             init_dict['ESTIMATION']['agents'] = init_dict['SIMULATION']['agents']
 
+    if 'num_procs'in constr.keys():
+        init_dict['PROGRAM']['procs'] = constr['num_procs']
+
     write_init_file(init_dict)
 
     file_name = 'test.respy.ini'
     respy_ini_old_to_new(file_name, True, file_name)
+
+    return  init_dict
 
 
 def get_observed_sample(fname='test.respy.ini'):

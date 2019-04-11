@@ -67,6 +67,12 @@ def smm_sample_f2py(state_space_info, disturbances, slavecomm_f2py, respy_obj):
 
 def get_communicator(respy_obj, data_array=None):
     """This is a temporary function that sets up the communicator."""
+
+    # There is no data available for the SMM estimation, so we generate a random sample that
+    # eases the all code that is coming later.
+    if data_array is None:
+        data_array = np.random.uniform(size=64).reshape(8, 8)
+
     labels = list()
     labels += ['optim_paras', 'num_periods', 'edu_spec', 'is_debug', 'num_draws_emax']
     labels += ['seed_emax', 'is_interpolated', 'num_points_interp', 'is_myopic', 'tau']

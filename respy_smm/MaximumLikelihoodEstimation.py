@@ -95,7 +95,7 @@ class MaximumLikelihoodEstimationCls(EstimationCls):
                     self.mpi_setup.Bcast([periods_draws_prob[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
 
             data = np.ascontiguousarray(self.data_array, np.float64)
-            for i in range(self.data_array.shape[0]):
+            for i in range(data.shape[0]):
                 self.mpi_setup.Bcast([data[i, :], MPI.DOUBLE], root=MPI.ROOT)
 
         args = list()
