@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import pickle as pkl
 import copy
+import os
 
 import numpy as np
 
@@ -152,6 +153,7 @@ class EstimationCls(object):
         self.x_free_econ_start = self.x_all_econ['start'][self.paras_free]
 
         if self.respy_base.get_attr('num_procs') > 1:
+            assert 'PMI_SIZE' in os.environ.keys()
             worker = get_communicator(self.respy_base, self.data_array)
         else:
             worker = MISSING_INT

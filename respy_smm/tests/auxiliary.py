@@ -6,20 +6,17 @@ import pandas as pd
 import numpy as np
 
 from respy.python.shared.shared_auxiliary import replace_missing_values
-from respy.python.solve.solve_auxiliary import pyth_create_state_space
 from respy.python.shared.shared_auxiliary import dist_class_attributes
 from respy.python.shared.shared_constants import TEST_RESOURCES_BUILD
 from respy.python.shared.shared_constants import DATA_FORMATS_SIM
 from respy.python.shared.shared_constants import DATA_LABELS_SIM
 from respy.python.shared.shared_auxiliary import create_draws
-from respy.python.shared.shared_constants import MISSING_INT
 from respy_smm.MaximumLikelihoodEstimation import MaximumLikelihoodEstimationCls
 from respy_smm.SimulationBasedEstimation import SimulationBasedEstimationCls
 from respy_smm.auxiliary_depreciation import respy_obj_from_new_init
 from respy.python.simulate.simulate_auxiliary import write_out
 
-from respy_smm.auxiliary import smm_sample_f2py
-from respy import RespyCls
+from respy_smm.auxiliary import smm_sample_f2py, get_initial_conditions
 from respy_smm.auxiliary_depreciation import respy_ini_old_to_new
 from respy.tests.codes.random_init import generate_init
 import os
@@ -28,38 +25,6 @@ from respy.tests.codes.random_init import write_init_file
 
 sys.path.insert(0, TEST_RESOURCES_BUILD)
 import f2py_interface as respy_f2py
-
-
-
-def smm_sample_pyth(state_space_info, disturbances, respy_obj):
-    """This function is a wrapper that is supposed to facilitate the application of SMM
-    estimation for the RESPY package."""
-    states_all, states_number_period, mapping_state_idx, max_states_period = state_space_info
-    periods_draws_emax, periods_draws_sims = disturbances
-
-    labels = list()
-    labels += ['num_periods', 'edu_spec', 'optim_paras', 'num_draws_emax', 'is_debug']
-    labels += ['is_interpolated', 'num_points_interp', 'is_myopic', 'num_agents_sim', 'seed_sim']
-    labels += ['file_sim', 'num_types', 'is_myopic']
-
-    num_periods, edu_spec, optim_paras, num_draws_emax, is_debug, is_interpolated, \
-        num_points_interp, is_myopic, num_agents_sim, seed_sim, file_sim, num_types, is_myopic = \
-        dist_class_attributes(respy_obj, *labels)
-
-    args = (num_periods, states_number_period, states_all, max_states_period, optim_paras)
-    periods_rewards_systematic = pyth_calculate_rewards_systematic(*args)
-
-    args = (num_periods, is_myopic, max_states_period, periods_draws_emax, num_draws_emax,
-        states_number_period, periods_rewards_systematic, mapping_state_idx, states_all,
-        is_debug, is_interpolated, num_points_interp, edu_spec, optim_paras, file_sim, False)
-    periods_emax = pyth_backward_induction(*args)
-
-    args = (periods_rewards_systematic, mapping_state_idx, periods_emax, states_all, num_periods,
-        num_agents_sim, periods_draws_sims, seed_sim, file_sim, edu_spec, optim_paras,
-        num_types, is_debug)
-    dat = pyth_simulate(*args)
-
-    return dat
 
 
 def get_random_point(fname='test.respy.ini'):
@@ -132,7 +97,10 @@ def get_observed_sample(fname='test.respy.ini'):
     args += [num_periods, num_types, edu_spec['start'], edu_spec['max'], edu_spec['max'] + 1]
     state_space_info = respy_f2py.wrapper_create_state_space(*args)
 
-    simulate_sample = partial(smm_sample_f2py, state_space_info, disturbances, -99)
+    initial_conditions = get_initial_conditions(respy_base)
+
+    simulate_sample = partial(smm_sample_f2py, state_space_info, initial_conditions, disturbances,
+                              -99)
 
     data_array = replace_missing_values(simulate_sample(respy_base))
     data_frame = pd.DataFrame(data_array, columns=DATA_LABELS_SIM)

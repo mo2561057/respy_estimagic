@@ -8,6 +8,9 @@ from respy.python.shared.shared_auxiliary import dist_class_attributes
 from respy.fortran.interface import write_resfort_initialization
 from respy.python.shared.shared_constants import ROOT_DIR, HUGE_FLOAT
 from respy_smm.auxiliary_depreciation import respy_obj_from_new_init
+from respy.python.simulate.simulate_auxiliary import get_random_types
+from respy.python.simulate.simulate_auxiliary import get_random_edu_start, \
+    get_random_lagged_start
 
 from respy_smm.src import smm_interface
 
@@ -29,19 +32,23 @@ def format_column(x):
         return '{:25.5f}'.format(x)
 
 
-def smm_sample_f2py(state_space_info, disturbances, slavecomm_f2py, respy_obj):
+def smm_sample_f2py(state_space_info, initial_conditions, disturbances, slavecomm_f2py, respy_obj):
     """This function is a wrapper that is supposed to facilitate the application of SMM
     estimation for the RESPY package."""
+
+    sample_edu_start, sample_lagged_start = initial_conditions
     periods_draws_emax, periods_draws_sims = disturbances
 
     labels = list()
     labels += ['num_periods', 'edu_spec', 'optim_paras', 'num_draws_emax', 'is_debug']
     labels += ['is_interpolated', 'num_points_interp', 'is_myopic', 'num_agents_sim', "num_paras"]
-    labels += ['num_procs']
+    labels += ['num_procs', 'num_types', 'seed_sim']
 
     num_periods, edu_spec, optim_paras, num_draws_emax, is_debug, is_interpolated, \
-        num_points_interp, is_myopic, num_agents_sim, num_paras, num_procs = \
+        num_points_interp, is_myopic, num_agents_sim, num_paras, num_procs, num_types, seed_sim = \
         dist_class_attributes(respy_obj, *labels)
+
+    np.random.seed(seed_sim)
 
     shocks_cholesky = optim_paras['shocks_cholesky']
     coeffs_common = optim_paras['coeffs_common']
@@ -54,11 +61,15 @@ def smm_sample_f2py(state_space_info, disturbances, slavecomm_f2py, respy_obj):
     type_spec_shares = optim_paras['type_shares']
     type_spec_shifts = optim_paras['type_shifts']
 
+    args = (num_types, optim_paras, num_agents_sim, sample_edu_start, is_debug)
+    sample_types = get_random_types(*args)
+
     args = state_space_info + (coeffs_common, coeffs_a, coeffs_b, coeffs_edu, coeffs_home,
         shocks_cholesky, delta, is_interpolated, num_points_interp, num_draws_emax, num_periods,
         is_myopic, is_debug, periods_draws_emax, num_agents_sim, periods_draws_sims,
         type_spec_shares, type_spec_shifts, edu_spec['start'], edu_spec['max'], edu_spec['lagged'],
-        edu_spec['share'], num_paras, slavecomm_f2py)
+        edu_spec['share'], num_paras, sample_edu_start, sample_lagged_start, sample_types,
+        slavecomm_f2py)
 
     dat = smm_interface.wrapper_smm(*args)
 
@@ -131,3 +142,20 @@ def get_processed_dataset(init_file):
     data_array = np.ascontiguousarray(data_array, np.float64)
 
     return data_array
+
+
+def get_initial_conditions(respy_obj):
+    # TODO: Cleanup the attribute list, not all needed.
+    labels = list()
+    labels += ['num_procs', 'num_periods', 'is_debug', 'seed_emax', 'seed_sim']
+    labels += ['num_draws_emax', 'num_agents_sim', 'num_types', 'edu_spec', 'version']
+
+    num_procs, num_periods, is_debug, seed_emax, seed_sim, num_draws_emax, num_agents_sim, \
+    num_types, edu_spec, version = dist_class_attributes(respy_obj, *labels)
+
+    np.random.seed(seed_sim)
+    sample_edu_start = get_random_edu_start(edu_spec, num_agents_sim, is_debug)
+    sample_lagged_start = get_random_lagged_start(edu_spec, num_agents_sim, sample_edu_start,
+                                                  is_debug)
+
+    return sample_edu_start, sample_lagged_start

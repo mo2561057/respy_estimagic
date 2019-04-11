@@ -5,7 +5,8 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, &
         coeffs_edu, coeffs_home, shocks_cholesky, delta, is_interpolated_int, &
         num_points_interp_int, num_draws_emax_int, num_periods_int, is_myopic_int, is_debug_int, &
         periods_draws_emax_int, num_agents_sim_int, periods_draws_sims, type_spec_shares, &
-        type_spec_shifts, edu_start, edu_max, edu_lagged, edu_share, num_paras_int, SLAVECOMM_F2PY)
+        type_spec_shifts, edu_start, edu_max, edu_lagged, edu_share, num_paras_int, &
+        sample_edu_start, sample_lagged_start, sample_types, SLAVECOMM_F2PY)
 
     !/* external libraries      */
 
@@ -21,10 +22,13 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, &
     INTEGER, INTENT(IN) :: mapping_state_idx_int(:, :, :, :, :, :)
     INTEGER, INTENT(IN) :: states_number_period_int(:)
     INTEGER, INTENT(IN) :: states_all_int(:, :, :)
+    INTEGER, INTENT(IN) :: sample_lagged_start(:)
     INTEGER, INTENT(IN) :: max_states_period_int
     INTEGER, INTENT(IN) :: num_points_interp_int
     INTEGER, INTENT(IN) :: num_agents_sim_int
     INTEGER, INTENT(IN) :: num_draws_emax_int
+    INTEGER, INTENT(IN) :: sample_edu_start(:)
+    INTEGER, INTENT(IN) :: sample_types(:)
     INTEGER, INTENT(IN) :: num_periods_int
     INTEGER, INTENT(IN) :: SLAVECOMM_F2PY
     INTEGER, INTENT(IN) :: num_paras_int
@@ -61,7 +65,6 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, &
     !---------------------------------------------------------------------------------------------------
     ! Algorithm
     !---------------------------------------------------------------------------------------------------
-
     ! Ensure that there is no problem with the repeated allocation of the containers.
     IF (ALLOCATED(periods_rewards_systematic)) DEALLOCATE(periods_rewards_systematic)
     IF (ALLOCATED(optim_paras%type_shifts)) DEALLOCATE(optim_paras%type_shares)
@@ -156,7 +159,7 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, &
 
     CALL fort_simulate(data_sim, periods_rewards_systematic, mapping_state_idx, periods_emax, &
     states_all, num_agents_sim, periods_draws_sims, one_int, file_sim, edu_spec, optim_paras, &
-    num_types, is_debug)
+    num_types, sample_edu_start, sample_lagged_start, sample_types)
 
     ! TODO: remove needed, but requires changes to RESPY as at the beginning of the module.
     data_sim_int = data_sim

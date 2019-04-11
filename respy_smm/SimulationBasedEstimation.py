@@ -9,7 +9,7 @@ from respy_smm.auxiliary_depreciation import shocks_spec_new_to_old
 from respy_smm.auxiliary_depreciation import respy_obj_from_new_init
 from respy_smm.auxiliary import is_valid_covariance_matrix
 from respy_smm.clsEstimation import EstimationCls
-from respy_smm.auxiliary import smm_sample_f2py
+from respy_smm.auxiliary import smm_sample_f2py, get_initial_conditions
 from respy_smm.clsLogging import logger_obj
 from respy_smm import HUGE_FLOAT
 from respy_smm import HUGE_INT
@@ -130,7 +130,10 @@ class SimulationBasedEstimationCls(EstimationCls):
             slavecomm = self.mpi_setup.py2f()
             self.set_up_baseline(periods_draws_emax, None)
 
-        self.simulate_sample = partial(smm_sample_f2py, state_space_info, disturbances, slavecomm)
+        initial_conditions = get_initial_conditions(self.respy_base)
+
+        args = (smm_sample_f2py, state_space_info, initial_conditions, disturbances, slavecomm)
+        self.simulate_sample = partial(*args)
 
     def _logging_smm(self, stats_obs, stats_sim):
         """This method contains logging capabilities that are just relevant for the SMM routine."""

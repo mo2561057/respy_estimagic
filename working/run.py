@@ -59,20 +59,24 @@ moments_obs, weighing_matrix = prepare_debugging_setup(init_file)
 # --------------------------------------------------------------------------------------------------
 # GENERAL setup for optimization problems, https://en.wikipedia.org/wiki/Adapter_pattern
 # --------------------------------------------------------------------------------------------------
-args_mle = (init_file, max_evals)
+#args_mle = (init_file, max_evals)
+from respy.python.shared.shared_auxiliary import dist_class_attributes
+
+
 args_smm = (init_file, moments_obs, weighing_matrix, get_moments, max_evals)
+SimulationBasedEstimationCls(*args_smm)
 
-try:
-    SimulationBasedEstimationCls(*args_smm)
-except StopIteration:
-    info_parallel = pkl.load(open('monitoring.estimagic.pkl', 'rb'))['fval']
 
-args_mle = ('debug.respy.scalar.ini', max_evals)
-args_smm = ('debug.respy.scalar.ini', moments_obs, weighing_matrix, get_moments, max_evals)
 
-try:
-    SimulationBasedEstimationCls(*args_smm)
-except StopIteration:
-    info_scalar = pkl.load(open('monitoring.estimagic.pkl', 'rb'))['fval']
-
-np.testing.assert_equal(info_parallel, info_parallel)
+# except StopIteration:
+#     info_parallel = pkl.load(open('monitoring.estimagic.pkl', 'rb'))['fval']
+#
+# args_mle = ('debug.respy.scalar.ini', max_evals)
+# args_smm = ('debug.respy.scalar.ini', moments_obs, weighing_matrix, get_moments, max_evals)
+#
+# try:
+#     SimulationBasedEstimationCls(*args_smm)
+# except StopIteration:
+#     info_scalar = pkl.load(open('monitoring.estimagic.pkl', 'rb'))['fval']
+#
+# np.testing.assert_equal(info_parallel, info_parallel)
