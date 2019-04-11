@@ -9,7 +9,10 @@ from respy_smm.SimulationBasedEstimation import SimulationBasedEstimationCls
 
 
 #
-init_dict_old = get_random_init()
+constr = dict()
+constr['flag_interpolation'] = False
+
+init_dict_old = get_random_init(constr)
 df = get_observed_sample()
 weighing_matrix = mock_get_weighing_matrix(df)
 moments_obs = mock_get_moments(df)
