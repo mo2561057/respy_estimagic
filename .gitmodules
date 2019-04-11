@@ -1,7 +1,3 @@
-[submodule "submodules/respy"]
-	path = submodules/respy
-	url = https://github.com/OpenSourceEconomics/respy.git
-        branch = peisenha_smm_integration
 [submodule "submodules/ose_utils"]
 	path = submodules/ose_utils
 	url = https://github.com/OpenSourceEconomics/ose_utils.git
