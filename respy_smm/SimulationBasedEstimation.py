@@ -30,6 +30,10 @@ class SimulationBasedEstimationCls(EstimationCls):
         super().__init__()
 
         self.respy_base = respy_obj_from_new_init(init_file)
+
+        # Creating a random data array also for the SMM routine allows to align a lot of the
+        # designs across the two different estimation strategies.
+        self.data_array = np.random.rand(8, 8)
         self.weighing_matrix = weighing_matrix
         self.get_moments = get_moments
         self.moments_obs = moments_obs
@@ -124,21 +128,7 @@ class SimulationBasedEstimationCls(EstimationCls):
             slavecomm = self.mpi_setup
         else:
             slavecomm = self.mpi_setup.py2f()
-
-            periods_draws_prob = create_draws(num_periods, num_draws_prob, seed_prob, is_debug)
-
-            from mpi4py import MPI
-            for i in range(num_periods):
-                for j in range(num_draws_emax):
-                    self.mpi_setup.Bcast([periods_draws_emax[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
-
-            for i in range(num_periods):
-                for j in range(num_draws_prob):
-                    self.mpi_setup.Bcast([periods_draws_prob[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
-
-            data = np.random.uniform(size=64).reshape(8, 8)
-            for i in range(data.shape[0]):
-                self.mpi_setup.Bcast([data[i, :], MPI.DOUBLE], root=MPI.ROOT)
+            self.set_up_baseline(periods_draws_emax, None)
 
         self.simulate_sample = partial(smm_sample_f2py, state_space_info, disturbances, slavecomm)
 

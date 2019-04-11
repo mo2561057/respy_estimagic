@@ -10,8 +10,11 @@ from respy_smm.auxiliary_depreciation import respy_ini_old_to_new
 from respy_smm.auxiliary import get_communicator
 from respy_smm.auxiliary import get_mpi
 
+from respy.python.shared.shared_auxiliary import dist_class_attributes
 from respy.python.shared.shared_constants import MISSING_INT
 from respy.python.shared.shared_constants import HUGE_FLOAT
+
+MPI = get_mpi()
 
 
 class EstimationCls(object):
@@ -154,3 +157,25 @@ class EstimationCls(object):
             worker = MISSING_INT
 
         self.mpi_setup = worker
+
+    def set_up_baseline(self, periods_draws_emax, periods_draws_prob):
+        """This method distributes the basic information to the slave processes."""
+        num_periods, num_draws_emax, num_draws_prob = \
+            dist_class_attributes(self.respy_base, 'num_periods', 'num_draws_emax',
+                                  'num_draws_prob')
+
+        # In the case of SMM these are not required and we simply create random numbers.
+        if periods_draws_prob is None:
+            periods_draws_prob = np.random.randn(num_periods, num_draws_prob, 4)
+
+        for i in range(num_periods):
+            for j in range(num_draws_emax):
+                self.mpi_setup.Bcast([periods_draws_emax[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
+
+        for i in range(num_periods):
+            for j in range(num_draws_prob):
+                self.mpi_setup.Bcast([periods_draws_prob[i, j, :], MPI.DOUBLE], root=MPI.ROOT)
+
+        # This is relevant for the SMM routine.
+        for i in range(self.data_array.shape[0]):
+            self.mpi_setup.Bcast([self.data_array[i, :], MPI.DOUBLE], root=MPI.ROOT)

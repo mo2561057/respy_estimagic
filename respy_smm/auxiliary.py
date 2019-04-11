@@ -128,4 +128,6 @@ def get_processed_dataset(init_file):
     respy_obj = respy_obj_from_new_init(init_file)
     data_array = process_dataset(respy_obj).values
     data_array[np.isnan(data_array)] = HUGE_FLOAT
+    data_array = np.ascontiguousarray(data_array, np.float64)
+
     return data_array
