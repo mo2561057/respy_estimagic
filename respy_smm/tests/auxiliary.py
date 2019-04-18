@@ -52,6 +52,7 @@ def get_random_init(constr=dict()):
     constr_respy.pop('flag_agents_equality', None)
     constr_respy.pop('num_procs', None)
 
+    constr_respy['flag_interpolation'] = False
     constr_respy['version'] = 'FORTRAN'
     init_dict = generate_init(constr_respy)
 
