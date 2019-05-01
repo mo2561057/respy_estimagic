@@ -28,4 +28,6 @@ def get_box_bounds(init_file):
     paras_bounds = process_shocks_bounds(paras_bounds)
     box = paras_bounds[paras_free]
 
+    assert np.all(box[:, 0] < box[:, 1])
+
     return box

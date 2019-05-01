@@ -36,6 +36,7 @@ class MaximumLikelihoodEstimationCls(EstimationCls):
     def evaluate(self, x_free_econ):
         """This method evaluates the criterion function for a candidate parametrization proposed
         by the optimizer."""
+        assert np.all(np.isfinite(x_free_econ))
         x_all_econ_current = self.construct_complete_parameters(x_free_econ)
 
         if not is_valid_covariance_matrix(x_all_econ_current[43:53]):

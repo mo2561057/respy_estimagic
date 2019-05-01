@@ -21,6 +21,7 @@ from respy.tests.codes.auxiliary import simulate_observed
 from respy.pre_processing.data_processing import process_dataset
 from respy_smm.optimizers.auxiliary_pybobyqa import wrapper_pybobyqa, get_box_bounds
 from smm_preparations import get_moments
+from respy_smm.tests.auxiliary import get_observed_sample, get_random_init
 
 
 def prepare_debugging_setup(init_file):
@@ -53,9 +54,18 @@ os.chdir('../')
 #os.system('git clean -df')
 os.chdir('working')
 
+#get_random_init()
+get_observed_sample('debug.respy.ini')
+
+est_obj = MaximumLikelihoodEstimationCls(*('debug.respy.ini', 3))
+
 # We need to specify the basics of the optimization problem.
-init_file, max_evals = 'debug.respy.ini', 1
-moments_obs, weighing_matrix = prepare_debugging_setup(init_file)
+#init_file, max_evals = 'debug.respy.ini', 1
+#prepare_debugging_setup(init_file)
+
+#MaximumLikelihoodEstimationCls(init_file, max_evals)
+
+#moments_obs, weighing_matrix = prepare_debugging_setup(init_file)
 # --------------------------------------------------------------------------------------------------
 # GENERAL setup for optimization problems, https://en.wikipedia.org/wiki/Adapter_pattern
 # --------------------------------------------------------------------------------------------------
@@ -63,8 +73,8 @@ moments_obs, weighing_matrix = prepare_debugging_setup(init_file)
 from respy.python.shared.shared_auxiliary import dist_class_attributes
 
 
-args_smm = (init_file, moments_obs, weighing_matrix, get_moments, max_evals)
-SimulationBasedEstimationCls(*args_smm)
+#args_smm = (init_file, moments_obs, weighing_matrix, get_moments, max_evals)
+#SimulationBasedEstimationCls(*args_smm)
 
 
 
