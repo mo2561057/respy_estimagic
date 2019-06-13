@@ -62,7 +62,7 @@ def smm_sample_f2py(state_space_info, initial_conditions, disturbances, slavecom
     type_spec_shifts = optim_paras['type_shifts']
 
     args = (num_types, optim_paras, num_agents_sim, sample_edu_start, is_debug)
-    sample_types = get_random_types(*args)
+    sample_types = np.ones(num_agents_sim)
 
     args = state_space_info + (coeffs_common, coeffs_a, coeffs_b, coeffs_edu, coeffs_home,
         shocks_cholesky, delta, is_interpolated, num_points_interp, num_draws_emax, num_periods,

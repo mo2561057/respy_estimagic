@@ -8,12 +8,12 @@ PACKAGE_DIR = os.path.dirname(os.path.realpath(__file__))
 IS_DEBUG = 'IS_DEVELOPMENT' in os.environ.keys()
 
 FLAGS_DEBUG = []
-FLAGS_DEBUG += ['-O', '-Wall', '-Wline-truncation', '-Wsurprising', '-Waliasing']
+FLAGS_DEBUG += ['-fopenmp','-O', '-Wall', '-Wline-truncation', '-Wsurprising', '-Waliasing']
 FLAGS_DEBUG += ['-Wunused-parameter', '-fwhole-file', '-fcheck=all']
 FLAGS_DEBUG += ['-fbacktrace', '-g', '-fmax-errors=1', '-ffree-line-length-0']
 FLAGS_DEBUG += ['-cpp', '-Wcharacter-truncation', '-Wimplicit-interface']
 
-FLAGS_PRODUCTION = ['-O3', '-ffree-line-length-0']
+FLAGS_PRODUCTION = ['-O3', '-ffree-line-length-0','-fopenmp']
 
 
 HUGE_INT = 1000000000
@@ -52,7 +52,7 @@ def compile_f2py(is_debug=False):
     path = os.path.dirname(respy.__file__)
 
     args = ''
-    args += '--f90exec=mpif90 --f90flags=' + '"' + ' '.join(FLAGS) + '" '
+    args += '-lgomp  --f90exec=mpif90 --f90flags=' + '"' + ' '.join(FLAGS) + '" '
     args += ' -I' + path + '/.bld  -L' + path + '/.bld/fortran'
     args += ' -lresfort_library -llapack'
 
@@ -66,3 +66,6 @@ try:
     from respy_smm.src import smm_interface
 except (ModuleNotFoundError, ImportError) as e:
     compile_f2py(IS_DEBUG)
+
+compile_f2py()
+

@@ -124,6 +124,7 @@ SUBROUTINE wrapper_smm(data_sim_int, states_all_int, states_number_period_int, &
     edu_spec%share = edu_share
     edu_spec%start = edu_start
     edu_spec%max = edu_max
+    WRITE(*,*) coeffs_b
 
     CALL extract_parsing_info(num_paras, num_types, pinfo)
 
